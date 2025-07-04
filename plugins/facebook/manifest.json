@@ -1,0 +1,98 @@
+{
+  "name": "facebook",
+  "version": "1.0.0",
+  "description": "Plugin per pubblicare post su Facebook utilizzando l'API Graph. Supporta post di testo, link e scheduling.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "facebook_state.py",
+  "state_type": "facebook",
+  "dependencies": {},
+  "requirements": [
+    "requests>=2.25.0"
+  ],
+  "api_version": "1.0",
+  "tags": ["social", "facebook", "posting", "automation"],
+  "documentation": {
+    "parameters": {
+      "access_token": {
+        "type": "string",
+        "required": true,
+        "description": "Token di accesso Facebook per l'autenticazione con l'API Graph"
+      },
+      "page_id": {
+        "type": "string", 
+        "required": true,
+        "description": "ID della pagina Facebook su cui pubblicare il post"
+      },
+      "message": {
+        "type": "string",
+        "required": false,
+        "description": "Testo del post da pubblicare"
+      },
+      "link": {
+        "type": "string",
+        "required": false,
+        "description": "URL del link da includere nel post"
+      },
+      "scheduled_publish_time": {
+        "type": "string|integer",
+        "required": false,
+        "description": "Data e ora di pubblicazione programmata (formato ISO, timestamp Unix, o formati comuni)"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare il risultato dell'operazione"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "Post semplice",
+        "description": "Pubblica un post di testo semplice",
+        "config": {
+          "state_type": "facebook",
+          "access_token": "{facebook_token}",
+          "page_id": "{page_id}",
+          "message": "Ciao dal mio bot!",
+          "transition": "next_step"
+        }
+      },
+      {
+        "name": "Post con link",
+        "description": "Pubblica un post con link",
+        "config": {
+          "state_type": "facebook",
+          "access_token": "{facebook_token}",
+          "page_id": "{page_id}",
+          "message": "Guarda questo fantastico progetto!",
+          "link": "https://github.com/kuduk/intellyhub-plugins",
+          "output": "facebook_result",
+          "transition": "next_step"
+        }
+      },
+      {
+        "name": "Post programmato",
+        "description": "Pubblica un post programmato",
+        "config": {
+          "state_type": "facebook",
+          "access_token": "{facebook_token}",
+          "page_id": "{page_id}",
+          "message": "Post programmato per domani!",
+          "scheduled_publish_time": "2024-01-15T10:30:00",
+          "success_transition": "success",
+          "error_transition": "error"
+        }
+      }
+    ]
+  }
+}
