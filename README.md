@@ -43,6 +43,25 @@ dependencies:
 
 [📖 Documentazione completa](./plugins/rss-listener/README.md)
 
+### 🤖 LLM Agent Plugin v1.0.0
+Plugin universale per l'integrazione di modelli AI tramite LangChain.
+
+**Caratteristiche:**
+- ✅ Multi-Provider (OpenAI, Anthropic, Ollama, HuggingFace)
+- ✅ LangChain Integration completa
+- ✅ Chain Support (Simple, Conversation)
+- ✅ Memory Management avanzata
+- ✅ Cost Optimization con provider locali
+- ✅ Flexible Prompting System
+
+**Installazione:**
+```yaml
+dependencies:
+  - llm-agent>=1.0.0
+```
+
+[📖 Documentazione completa](./plugins/llm-agent/README.md)
+
 ## Come Installare i Plugin
 
 ### Metodo 1: Package Manager (Raccomandato)

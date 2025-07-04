@@ -1,0 +1,261 @@
+{
+  "name": "llm-agent",
+  "version": "1.0.0",
+  "description": "Plugin LLM Agent universale che supporta multipli provider AI tramite LangChain. Compatibile con OpenAI, Anthropic, Ollama, HuggingFace e altri provider LLM.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "llm_agent_state.py",
+  "state_type": "llm_agent",
+  "dependencies": {},
+  "requirements": [
+    "langchain>=0.1.0",
+    "openai>=1.0.0",
+    "anthropic>=0.8.0",
+    "transformers>=4.30.0",
+    "torch>=2.0.0"
+  ],
+  "optional_requirements": [
+    "chromadb>=0.4.0",
+    "faiss-cpu>=1.7.0",
+    "sentence-transformers>=2.2.0"
+  ],
+  "api_version": "1.0",
+  "tags": ["ai", "llm", "langchain", "openai", "anthropic", "ollama", "chat", "nlp"],
+  "documentation": {
+    "parameters": {
+      "provider": {
+        "type": "string",
+        "required": true,
+        "default": "openai",
+        "options": ["openai", "anthropic", "ollama", "huggingface"],
+        "description": "Provider LLM da utilizzare"
+      },
+      "model": {
+        "type": "string",
+        "required": true,
+        "default": "gpt-3.5-turbo",
+        "description": "Nome del modello specifico del provider"
+      },
+      "api_key": {
+        "type": "string",
+        "required": false,
+        "description": "Chiave API per provider cloud (OpenAI, Anthropic)"
+      },
+      "base_url": {
+        "type": "string",
+        "required": false,
+        "description": "URL base per provider locali (Ollama) o endpoint personalizzati"
+      },
+      "temperature": {
+        "type": "float",
+        "required": false,
+        "default": 0.7,
+        "description": "Temperatura per la generazione (0.0-2.0)"
+      },
+      "max_tokens": {
+        "type": "integer",
+        "required": false,
+        "default": 1000,
+        "description": "Numero massimo di token da generare"
+      },
+      "system_prompt": {
+        "type": "string",
+        "required": false,
+        "description": "Prompt di sistema per definire il comportamento dell'AI"
+      },
+      "user_prompt": {
+        "type": "string",
+        "required": true,
+        "default": "{input}",
+        "description": "Prompt utente con placeholder per variabili"
+      },
+      "input": {
+        "type": "string",
+        "required": false,
+        "description": "Input diretto da processare"
+      },
+      "chain_type": {
+        "type": "string",
+        "required": false,
+        "default": "simple",
+        "options": ["simple", "conversation"],
+        "description": "Tipo di chain LangChain da utilizzare"
+      },
+      "memory": {
+        "type": "object",
+        "required": false,
+        "description": "Configurazione memoria per conversazioni",
+        "properties": {
+          "enabled": {"type": "boolean", "default": false},
+          "type": {"type": "string", "options": ["buffer", "summary"]},
+          "key": {"type": "string", "default": "chat_history"}
+        }
+      },
+      "chat_mode": {
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Usa chat models invece di completion models"
+      },
+      "verbose": {
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Abilita logging verboso delle chain"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare l'output completo"
+      },
+      "response_key": {
+        "type": "string",
+        "required": false,
+        "default": "llm_response",
+        "description": "Nome della variabile dove salvare solo la risposta"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "OpenAI Chat semplice",
+        "description": "Usa GPT-4 per rispondere a una domanda",
+        "config": {
+          "state_type": "llm_agent",
+          "provider": "openai",
+          "model": "gpt-4",
+          "api_key": "{openai_api_key}",
+          "temperature": 0.7,
+          "system_prompt": "Sei un assistente utile e preciso.",
+          "user_prompt": "Rispondi a questa domanda: {user_question}",
+          "output": "ai_response",
+          "transition": "next_step"
+        }
+      },
+      {
+        "name": "Ollama locale",
+        "description": "Usa un modello locale Ollama",
+        "config": {
+          "state_type": "llm_agent",
+          "provider": "ollama",
+          "model": "llama2",
+          "base_url": "http://localhost:11434",
+          "temperature": 0.5,
+          "user_prompt": "Analizza questo testo: {input_text}",
+          "response_key": "analysis_result",
+          "transition": "process_result"
+        }
+      },
+      {
+        "name": "Conversazione con memoria",
+        "description": "Chat conversazionale con memoria",
+        "config": {
+          "state_type": "llm_agent",
+          "provider": "anthropic",
+          "model": "claude-3-sonnet-20240229",
+          "api_key": "{anthropic_api_key}",
+          "chain_type": "conversation",
+          "memory": {
+            "enabled": true,
+            "type": "buffer"
+          },
+          "user_prompt": "{user_message}",
+          "output": "chat_response",
+          "transition": "continue_chat"
+        }
+      },
+      {
+        "name": "Analisi sentiment",
+        "description": "Analizza il sentiment di un testo",
+        "config": {
+          "state_type": "llm_agent",
+          "provider": "openai",
+          "model": "gpt-3.5-turbo",
+          "api_key": "{openai_api_key}",
+          "temperature": 0.1,
+          "system_prompt": "Analizza il sentiment del testo e rispondi solo con: POSITIVO, NEGATIVO, o NEUTRO.",
+          "user_prompt": "Testo da analizzare: {text_to_analyze}",
+          "response_key": "sentiment",
+          "transition": "process_sentiment"
+        }
+      },
+      {
+        "name": "Generazione contenuti",
+        "description": "Genera contenuti per social media",
+        "config": {
+          "state_type": "llm_agent",
+          "provider": "openai",
+          "model": "gpt-4",
+          "api_key": "{openai_api_key}",
+          "temperature": 0.8,
+          "max_tokens": 500,
+          "system_prompt": "Sei un esperto di social media marketing. Crea contenuti coinvolgenti e professionali.",
+          "user_prompt": "Crea un post per {platform} sul tema: {topic}. Includi hashtag appropriati.",
+          "output": "generated_content",
+          "success_transition": "post_content",
+          "error_transition": "handle_error"
+        }
+      }
+    ],
+    "provider_configs": {
+      "openai": {
+        "required_params": ["api_key"],
+        "models": ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-3.5-turbo-16k"],
+        "chat_mode": true
+      },
+      "anthropic": {
+        "required_params": ["api_key"],
+        "models": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
+        "chat_mode": true
+      },
+      "ollama": {
+        "required_params": ["base_url"],
+        "models": ["llama2", "codellama", "mistral", "neural-chat"],
+        "chat_mode": false,
+        "local": true
+      },
+      "huggingface": {
+        "required_params": [],
+        "models": ["microsoft/DialoGPT-medium", "facebook/blenderbot-400M-distill"],
+        "local": true,
+        "note": "Richiede transformers e torch installati"
+      }
+    }
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. Le dipendenze LangChain verranno installate automaticamente",
+      "3. Installa provider specifici se necessario:",
+      "   - OpenAI: pip install openai",
+      "   - Anthropic: pip install anthropic", 
+      "   - HuggingFace: pip install transformers torch",
+      "   - Ollama: Installa Ollama separatamente",
+      "4. Configura le API keys nelle variabili d'ambiente o nel workflow",
+      "5. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio:",
+      "✅ Stato 'llm_agent' registrato dalla classe LLMAgentState"
+    ],
+    "environment_variables": [
+      "OPENAI_API_KEY - per provider OpenAI",
+      "ANTHROPIC_API_KEY - per provider Anthropic",
+      "HUGGINGFACE_API_TOKEN - per modelli HuggingFace Hub"
+    ]
+  },
+  "compatibility": {
+    "langchain_version": ">=0.1.0",
+    "python_version": ">=3.8",
+    "platforms": ["linux", "macos", "windows"]
+  }
+}
