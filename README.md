@@ -25,6 +25,24 @@ dependencies:
 
 [📖 Documentazione completa](./plugins/facebook/README.md)
 
+### 📡 RSS Listener Plugin v1.0.0
+Plugin listener per monitorare feed RSS e avviare automazioni sui nuovi articoli.
+
+**Caratteristiche:**
+- ✅ Monitoraggio multipli feed RSS
+- ✅ Cache intelligente anti-duplicati
+- ✅ Configurazione flessibile
+- ✅ Estrazione dati completa
+- ✅ Gestione errori robusta
+
+**Installazione:**
+```yaml
+dependencies:
+  - rss-listener>=1.0.0
+```
+
+[📖 Documentazione completa](./plugins/rss-listener/README.md)
+
 ## Come Installare i Plugin
 
 ### Metodo 1: Package Manager (Raccomandato)
