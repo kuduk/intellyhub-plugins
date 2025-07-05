@@ -77,7 +77,7 @@ class FacebookState(BaseState):
                 return self.state_config.get("error_transition", "end")
         
         # URL dell'API Facebook Graph
-        api_url = f"https://graph.facebook.com/v18.0/{page_id}/feed"
+        api_url = f"https://graph.facebook.com/v23.0/{page_id}/feed"
         
         try:
             # Effettua la chiamata POST all'API Facebook
