@@ -62,6 +62,45 @@ dependencies:
 
 [📖 Documentazione completa](./plugins/llm-agent/README.md)
 
+### 🐍 Python Code Generator Plugin v1.0.0
+Plugin avanzato per la generazione automatica di codice Python con pianificazione step-by-step.
+
+**Caratteristiche:**
+- ✅ Pianificazione intelligente con controllo step
+- ✅ Generazione codice iterativa con revisioni
+- ✅ Test automatici inclusi nel conteggio step
+- ✅ Multi-Provider LLM (OpenAI, Anthropic, Ollama)
+- ✅ Validazione sintassi e qualità del codice
+- ✅ Metriche dettagliate e performance tracking
+- ✅ Modalità: plan_only, generate_only, full
+
+**Installazione:**
+```yaml
+dependencies:
+  - python-code-generator>=1.0.0
+```
+
+[📖 Documentazione completa](./plugins/python-code-generator/README.md)
+
+### 🔗 LinkedIn Plugin v1.0.0
+Plugin avanzato per estrarre dati pubblici da LinkedIn tramite web scraping.
+
+**Caratteristiche:**
+- ✅ Ricerca profili persone e aziende
+- ✅ Filtri avanzati configurabili
+- ✅ Doppia modalità scraping (Requests + Selenium)
+- ✅ Integrazione LLM per analisi intelligente
+- ✅ Anti-detection e gestione errori robusta
+- ✅ Output strutturato JSON
+
+**Installazione:**
+```yaml
+dependencies:
+  - linkedin>=1.0.0
+```
+
+[📖 Documentazione completa](./plugins/linkedin/README.md)
+
 ## Come Installare i Plugin
 
 ### Metodo 1: Package Manager (Raccomandato)
@@ -193,7 +232,6 @@ states:
 
 - 🔄 **Twitter Plugin** - Pubblicazione tweet e gestione timeline
 - 🔄 **Instagram Plugin** - Pubblicazione foto e stories
-- 🔄 **LinkedIn Plugin** - Pubblicazione post professionali
 - 🔄 **Telegram Plugin** - Invio messaggi e gestione bot
 - 🔄 **Discord Plugin** - Integrazione con server Discord
 - 🔄 **Slack Plugin** - Notifiche e automazioni workspace

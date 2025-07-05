@@ -1,0 +1,77 @@
+# Esempio Base: Generazione Fibonacci con OpenAI
+# Dimostra l'utilizzo base del plugin per generare una funzione semplice
+
+variables:
+  openai_api_key: ""  # Inserisci la tua API key OpenAI
+  fibonacci_terms: 10
+
+start_state: "generate_fibonacci"
+
+states:
+  generate_fibonacci:
+    state_type: "python_code_generator"
+    prompt: "Crea una funzione per calcolare la sequenza di Fibonacci fino a {fibonacci_terms} termini. La funzione deve essere efficiente e includere validazione input."
+    max_steps: 12
+    provider: "openai"
+    model: "gpt-3.5-turbo"
+    api_key: "{openai_api_key}"
+    temperature: 0.3
+    complexity_level: "simple"
+    code_style: "pep8"
+    include_tests: true
+    include_documentation: true
+    validate_syntax: true
+    output: "fibonacci_result"
+    code_output: "fibonacci_code"
+    tests_output: "fibonacci_tests"
+    success_transition: "show_result"
+    error_transition: "handle_error"
+
+  show_result:
+    state_type: "command"
+    action:
+      eval: |
+        print("🎉 Generazione Fibonacci completata!")
+        print(f"📊 Step eseguiti: {fibonacci_result.steps_executed}/{fibonacci_result.steps_executed + fibonacci_result.steps_remaining}")
+        print(f"⏱️ Tempo totale: {fibonacci_result.execution_time:.2f}s")
+        print(f"🔄 Revisioni piano: {fibonacci_result.plan_revisions}")
+        print("\n" + "="*50)
+        print("📋 PIANO DI ESECUZIONE:")
+        for i, step in enumerate(fibonacci_result.execution_plan, 1):
+            print(f"{i}. {step['title']}: {step['description']}")
+        print("\n" + "="*50)
+        print("🐍 CODICE GENERATO:")
+        print(fibonacci_code)
+        print("\n" + "="*50)
+        print("🧪 TEST GENERATI:")
+        print(fibonacci_tests)
+    transition: "save_files"
+
+  save_files:
+    state_type: "file"
+    action: "write"
+    path: "generated_fibonacci.py"
+    content: "{fibonacci_code}"
+    transition: "save_tests"
+
+  save_tests:
+    state_type: "file"
+    action: "write"
+    path: "test_fibonacci.py"
+    content: "{fibonacci_tests}"
+    transition: "end"
+
+  handle_error:
+    state_type: "command"
+    action:
+      eval: |
+        print("❌ Errore nella generazione:")
+        print(f"Errore: {fibonacci_result.get('error', 'Errore sconosciuto')}")
+        print(f"Step eseguiti: {fibonacci_result.get('steps_executed', 0)}")
+        if fibonacci_result.get('partial_code'):
+            print("\n🔧 Codice parziale generato:")
+            print(fibonacci_result.partial_code)
+    transition: "end"
+
+  end:
+    state_type: "end"

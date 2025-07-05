@@ -1,0 +1,256 @@
+# Esempio Avanzato: Algoritmo di Sorting con Anthropic Claude
+# Dimostra l'utilizzo avanzato per generare algoritmi complessi
+
+variables:
+  anthropic_api_key: ""  # Inserisci la tua API key Anthropic
+  dataset_size: "grandi dataset (>1M elementi)"
+  algorithm_type: "merge sort ottimizzato"
+
+start_state: "generate_algorithm"
+
+states:
+  generate_algorithm:
+    state_type: "python_code_generator"
+    prompt: |
+      Implementa un {algorithm_type} per {dataset_size} con le seguenti caratteristiche:
+      1. Ottimizzazioni per memoria e performance
+      2. Supporto per diversi tipi di dati (numeri, stringhe, oggetti custom)
+      3. Parallelizzazione quando possibile
+      4. Analisi di complessità temporale e spaziale
+      5. Benchmark integrati
+      6. Gestione errori robusta
+      7. Logging dettagliato delle performance
+    max_steps: 30
+    provider: "anthropic"
+    model: "claude-3-sonnet-20240229"
+    api_key: "{anthropic_api_key}"
+    temperature: 0.2
+    complexity_level: "expert"
+    code_style: "google"
+    include_tests: true
+    include_documentation: true
+    validate_syntax: true
+    execution_mode: "full"
+    output: "algorithm_result"
+    code_output: "algorithm_code"
+    tests_output: "algorithm_tests"
+    plan_output: "algorithm_plan"
+    success_transition: "analyze_result"
+    error_transition: "handle_error"
+
+  analyze_result:
+    state_type: "command"
+    action:
+      eval: |
+        print("🎉 Algoritmo di Sorting Avanzato Completato!")
+        print("="*60)
+        print(f"🤖 Provider: {algorithm_result.provider} ({algorithm_result.model})")
+        print(f"📊 Step eseguiti: {algorithm_result.steps_executed}")
+        print(f"📈 Step rimanenti: {algorithm_result.steps_remaining}")
+        print(f"⏱️ Tempo totale: {algorithm_result.execution_time:.2f}s")
+        print(f"🔄 Revisioni piano: {algorithm_result.plan_revisions}")
+        print(f"⚡ Tempo medio per step: {algorithm_result.performance_metrics.average_step_time:.2f}s")
+        
+        print("\n📋 PIANO DI ESECUZIONE DETTAGLIATO:")
+        print("-" * 60)
+        for i, step in enumerate(algorithm_result.execution_plan, 1):
+            components = ", ".join(step.get('components', []))
+            print(f"{i:2d}. {step['title']}")
+            print(f"     📝 {step['description']}")
+            if components:
+                print(f"     🔧 Componenti: {components}")
+            print()
+        
+        print("⏱️ TIMELINE ESECUZIONE:")
+        print("-" * 60)
+        for step_info in algorithm_result.performance_metrics.step_times:
+            print(f"Step {step_info.step:2d} ({step_info.type:15s}): {step_info.time:6.2f}s")
+    transition: "save_algorithm"
+
+  save_algorithm:
+    state_type: "file"
+    action: "write"
+    path: "advanced_sorting_algorithm.py"
+    content: |
+      """
+      Algoritmo di Sorting Avanzato
+      Generato automaticamente da IntellyHub Python Code Generator
+      
+      Provider: {algorithm_result.provider}
+      Model: {algorithm_result.model}
+      Generato il: {algorithm_result.timestamp}
+      Step eseguiti: {algorithm_result.steps_executed}
+      Tempo di generazione: {algorithm_result.execution_time:.2f}s
+      """
+      
+      {algorithm_code}
+    transition: "save_tests"
+
+  save_tests:
+    state_type: "file"
+    action: "write"
+    path: "test_advanced_sorting.py"
+    content: |
+      """
+      Test per Algoritmo di Sorting Avanzato
+      Generato automaticamente da IntellyHub Python Code Generator
+      """
+      
+      {algorithm_tests}
+    transition: "save_plan"
+
+  save_plan:
+    state_type: "file"
+    action: "write"
+    path: "algorithm_development_plan.json"
+    content: "{algorithm_plan}"
+    transition: "create_benchmark"
+
+  create_benchmark:
+    state_type: "python_code_generator"
+    prompt: |
+      Crea uno script di benchmark per testare le performance dell'algoritmo di sorting generato.
+      Lo script deve:
+      1. Testare con dataset di diverse dimensioni (1K, 10K, 100K, 1M elementi)
+      2. Confrontare con algoritmi standard (sorted(), heapq, etc.)
+      3. Misurare tempo di esecuzione e utilizzo memoria
+      4. Generare grafici delle performance
+      5. Salvare risultati in formato CSV e JSON
+    max_steps: 15
+    provider: "anthropic"
+    model: "claude-3-sonnet-20240229"
+    api_key: "{anthropic_api_key}"
+    temperature: 0.3
+    complexity_level: "medium"
+    include_tests: false
+    execution_mode: "generate_only"
+    code_output: "benchmark_code"
+    success_transition: "save_benchmark"
+    error_transition: "finalize"
+
+  save_benchmark:
+    state_type: "file"
+    action: "write"
+    path: "benchmark_sorting_algorithm.py"
+    content: |
+      """
+      Benchmark Script per Algoritmo di Sorting
+      Generato automaticamente da IntellyHub Python Code Generator
+      """
+      
+      {benchmark_code}
+    transition: "create_readme"
+
+  create_readme:
+    state_type: "file"
+    action: "write"
+    path: "SORTING_ALGORITHM_README.md"
+    content: |
+      # 🚀 Algoritmo di Sorting Avanzato
+      
+      Algoritmo generato automaticamente da **IntellyHub Python Code Generator**.
+      
+      ## 📊 Statistiche Generazione
+      
+      - **Provider LLM**: {algorithm_result.provider}
+      - **Modello**: {algorithm_result.model}
+      - **Data Generazione**: {algorithm_result.timestamp}
+      - **Step Eseguiti**: {algorithm_result.steps_executed}/{algorithm_result.steps_executed + algorithm_result.steps_remaining}
+      - **Tempo Totale**: {algorithm_result.execution_time:.2f} secondi
+      - **Revisioni Piano**: {algorithm_result.plan_revisions}
+      - **Tempo Medio per Step**: {algorithm_result.performance_metrics.average_step_time:.2f}s
+      
+      ## 📁 File Generati
+      
+      - `advanced_sorting_algorithm.py` - Implementazione principale
+      - `test_advanced_sorting.py` - Test unitari
+      - `benchmark_sorting_algorithm.py` - Script di benchmark
+      - `algorithm_development_plan.json` - Piano di sviluppo utilizzato
+      
+      ## 🚀 Utilizzo
+      
+      ```python
+      # Importa l'algoritmo
+      from advanced_sorting_algorithm import *
+      
+      # Usa l'algoritmo
+      data = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
+      sorted_data = your_sorting_function(data)
+      print(sorted_data)
+      ```
+      
+      ## 🧪 Test
+      
+      ```bash
+      # Esegui i test
+      python -m pytest test_advanced_sorting.py -v
+      
+      # Esegui benchmark
+      python benchmark_sorting_algorithm.py
+      ```
+      
+      ## 📈 Piano di Sviluppo
+      
+      Il seguente piano è stato utilizzato per la generazione:
+      
+      {% for step in algorithm_result.execution_plan %}
+      ### Step {{ loop.index }}: {{ step.title }}
+      
+      **Descrizione**: {{ step.description }}
+      
+      {% if step.components %}
+      **Componenti**: {{ step.components | join(', ') }}
+      {% endif %}
+      
+      {% endfor %}
+      
+      ---
+      
+      *Generato con ❤️ da IntellyHub Python Code Generator v1.0.0*
+    transition: "finalize"
+
+  finalize:
+    state_type: "command"
+    action:
+      eval: |
+        print("\n🎉 GENERAZIONE COMPLETATA CON SUCCESSO!")
+        print("="*60)
+        print("📁 File creati:")
+        print("   • advanced_sorting_algorithm.py")
+        print("   • test_advanced_sorting.py") 
+        print("   • benchmark_sorting_algorithm.py")
+        print("   • algorithm_development_plan.json")
+        print("   • SORTING_ALGORITHM_README.md")
+        print("\n🚀 Prossimi passi:")
+        print("   1. Rivedi il codice generato")
+        print("   2. Esegui i test: python -m pytest test_advanced_sorting.py")
+        print("   3. Esegui benchmark: python benchmark_sorting_algorithm.py")
+        print("   4. Ottimizza se necessario")
+        print("\n✨ Buon coding!")
+    transition: "end"
+
+  handle_error:
+    state_type: "command"
+    action:
+      eval: |
+        print("❌ ERRORE NELLA GENERAZIONE DELL'ALGORITMO")
+        print("="*50)
+        if 'algorithm_result' in locals():
+            print(f"Errore: {algorithm_result.get('error', 'Errore sconosciuto')}")
+            print(f"Step completati: {algorithm_result.get('steps_executed', 0)}")
+            
+            if algorithm_result.get('partial_code'):
+                print("\n🔧 Codice parziale disponibile:")
+                print("Salvando il codice parziale...")
+                # Salva comunque il codice parziale
+        else:
+            print("Errore durante l'inizializzazione del plugin")
+        
+        print("\n💡 Suggerimenti:")
+        print("   • Verifica la configurazione API key")
+        print("   • Riduci max_steps se il limite è stato superato")
+        print("   • Semplifica il prompt se troppo complesso")
+    transition: "end"
+
+  end:
+    state_type: "end"
