@@ -101,6 +101,25 @@ dependencies:
 
 [📖 Documentazione completa](./plugins/linkedin/README.md)
 
+### 🔊 Text-to-Speech Plugin v1.0.0
+Plugin avanzato per convertire testo in audio utilizzando l'API di ElevenLabs.
+
+**Caratteristiche:**
+- ✅ Integrazione ElevenLabs API di alta qualità
+- ✅ Supporto Multi-Voce e Multi-Lingua
+- ✅ Gestione file automatica con timestamp
+- ✅ Configurazione avanzata delle voci
+- ✅ Output MP3 nella cartella workspace
+- ✅ Gestione errori robusta e logging dettagliato
+
+**Installazione:**
+```yaml
+dependencies:
+  - text-to-speech>=1.0.0
+```
+
+[📖 Documentazione completa](./plugins/text-to-speech/README.md)
+
 ## Come Installare i Plugin
 
 ### Metodo 1: Package Manager (Raccomandato)
