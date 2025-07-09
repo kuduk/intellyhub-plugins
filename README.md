@@ -43,6 +43,24 @@ dependencies:
 
 [📖 Documentazione completa](./plugins/rss-listener/README.md)
 
+### 📰 RSS Reader Plugin v1.0.0
+Plugin stato per leggere feed RSS e filtrare articoli con oggetto Python strutturato.
+
+**Caratteristiche:**
+- ✅ Lettura RSS universale con filtro temporale
+- ✅ Oggetto Python strutturato (RSSFeedResult/RSSArticle)
+- ✅ Metodi di filtraggio avanzati (keyword, autore, tag, data)
+- ✅ Ottimizzato per automatismi e integrazione
+- ✅ Gestione errori robusta e performance ottimizzate
+
+**Installazione:**
+```yaml
+dependencies:
+  - rss-reader>=1.0.0
+```
+
+[📖 Documentazione completa](./plugins/rss-reader/README.md)
+
 ### 🤖 LLM Agent Plugin v1.0.0
 Plugin universale per l'integrazione di modelli AI tramite LangChain.
 

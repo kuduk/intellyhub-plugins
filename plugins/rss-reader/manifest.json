@@ -1,0 +1,49 @@
+{
+  "name": "rss-reader",
+  "version": "1.0.0",
+  "description": "Plugin per leggere feed RSS e filtrare articoli per data con oggetto Python strutturato",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "rss_reader_state.py",
+  "state_type": "rss_reader",
+  "dependencies": {},
+  "requirements": [
+    "feedparser>=6.0.0"
+  ],
+  "api_version": "1.0",
+  "tags": [
+    "rss",
+    "feed",
+    "news",
+    "reader",
+    "automation",
+    "filtering"
+  ],
+  "parameters": {
+    "required": [
+      "feed_url"
+    ],
+    "optional": [
+      "lookback_hours",
+      "max_entries",
+      "output_variable",
+      "transition"
+    ]
+  },
+  "output": {
+    "type": "RSSFeedResult",
+    "description": "Oggetto strutturato contenente feed info, articoli filtrati e statistiche"
+  },
+  "examples": [
+    {
+      "name": "Basic RSS Reading",
+      "description": "Legge un feed RSS delle ultime 24 ore",
+      "yaml": "diagrammi/test_rss_reader.yaml"
+    },
+    {
+      "name": "Simple Filtering",
+      "description": "Filtra articoli per parole chiave",
+      "yaml": "diagrammi/test_rss_reader_simple.yaml"
+    }
+  ]
+}
