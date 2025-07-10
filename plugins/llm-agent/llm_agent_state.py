@@ -2,6 +2,7 @@ import logging
 import json
 from datetime import datetime
 from .base_state import BaseState
+from langchain.chains import ConversationChain, LLMChain 
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class LLMAgentState(BaseState):
     def _get_provider_config(self):
         """Estrae la configurazione del provider LLM."""
         provider = self.state_config.get("provider", "openai").lower()
-        model = self.state_config.get("model", "gpt-3.5-turbo")
+        model = self.state_config.get("model", "gpt-4.1-nano")
         temperature = float(self.state_config.get("temperature", 0.7))
         max_tokens = self.state_config.get("max_tokens", 1000)
         
@@ -35,12 +36,15 @@ class LLMAgentState(BaseState):
     def _initialize_llm(self, variables):
         """Inizializza il modello LLM basato sul provider configurato."""
         try:
-            from langchain.llms import OpenAI, Ollama
-            from langchain.chat_models import ChatOpenAI, ChatAnthropic
-            from langchain.llms import HuggingFacePipeline
+            # --- MODIFICHE QUI ---
+            # Importazioni aggiornate ai nuovi pacchetti specifici
+            from langchain_community.llms import Ollama, HuggingFacePipeline
+            from langchain_openai import OpenAI, ChatOpenAI
+            from langchain_anthropic import ChatAnthropic
+            # --- FINE MODIFICHE ---
         except ImportError:
-            logger.error("LangChain non installato. Installa con: pip install langchain")
-            raise ImportError("LangChain è richiesto per il plugin LLM Agent")
+            logger.error("Uno o più pacchetti LangChain (es. langchain-community, langchain-openai) non sono installati.")
+            raise ImportError("LangChain e i suoi componenti specifici sono richiesti per il plugin LLM Agent")
         
         config = self._get_provider_config()
         provider = config["provider"]
@@ -72,7 +76,7 @@ class LLMAgentState(BaseState):
                 self._llm = ChatAnthropic(
                     model=config["model"],
                     temperature=config["temperature"],
-                    max_tokens=config["max_tokens"],
+                    max_tokens_to_sample=config["max_tokens"], # Nota: Anthropic usa 'max_tokens_to_sample'
                     anthropic_api_key=api_key
                 )
                 
@@ -114,7 +118,11 @@ class LLMAgentState(BaseState):
             return None
             
         try:
+            # --- MODIFICHE QUI ---
             from langchain.memory import ConversationBufferMemory, ConversationSummaryMemory
+            # Le classi di memoria sono ancora in langchain, ma è bene sapere che potrebbero spostarsi.
+            # Per ora, questo è corretto.
+            # --- FINE MODIFICHE ---
             
             memory_type = memory_config.get("type", "buffer")
             memory_key = memory_config.get("key", "chat_history")
@@ -137,24 +145,31 @@ class LLMAgentState(BaseState):
             logger.warning("Memoria non disponibile, LangChain non completo")
         except Exception as e:
             logger.error(f"Errore nell'inizializzazione memoria: {e}")
+            
+    # Il resto della classe rimane invariato...
+    # ... ( _initialize_chain, _format_prompt, execute ) ...
+    # Ho omesso il resto del codice per brevità, dato che non richiede modifiche.
+    # Assicurati di copiare le funzioni _initialize_llm e _initialize_memory aggiornate nel tuo file.
     
+    # ... Incolla qui il resto della tua classe ...
     def _initialize_chain(self):
         """Inizializza la chain LangChain."""
         chain_type = self.state_config.get("chain_type", "simple")
         
         try:
             from langchain.chains import LLMChain, ConversationChain
-            from langchain.prompts import PromptTemplate, ChatPromptTemplate
+            from langchain.prompts import PromptTemplate
             
             if chain_type == "simple":
-                # Chain semplice con prompt template
                 system_prompt = self.state_config.get("system_prompt", "")
-                user_prompt = self.state_config.get("user_prompt", "{input}")
+
                 
+                # Per evitare problemi con LangChain, usiamo sempre {input} come placeholder
+                # La formattazione complessa verrà gestita nel metodo _format_prompt
                 if system_prompt:
-                    template = f"{system_prompt}\n\nUser: {user_prompt}\nAssistant:"
+                    template = f"{system_prompt}\n\nUser: {{input}}\nAssistant:"
                 else:
-                    template = user_prompt
+                    template = "{input}"
                 
                 prompt = PromptTemplate(
                     template=template,
@@ -168,7 +183,6 @@ class LLMAgentState(BaseState):
                 )
                 
             elif chain_type == "conversation":
-                # Chain conversazionale con memoria
                 self._chain = ConversationChain(
                     llm=self._llm,
                     memory=self._memory,
@@ -176,10 +190,12 @@ class LLMAgentState(BaseState):
                 )
                 
             else:
-                # Fallback a chain semplice
                 logger.warning(f"Chain type '{chain_type}' non supportato, uso 'simple'")
-                self._initialize_chain_simple()
-                
+                # Ricadi su una configurazione 'simple' di default
+                self.state_config['chain_type'] = 'simple'
+                self._initialize_chain()
+                return
+
             logger.info(f"Chain inizializzata: {chain_type}")
             
         except ImportError:
@@ -188,48 +204,48 @@ class LLMAgentState(BaseState):
         except Exception as e:
             logger.error(f"Errore nell'inizializzazione chain: {e}")
             raise
-    
+
     def _format_prompt(self, variables):
         """Formatta il prompt con le variabili disponibili."""
-        user_prompt = self.state_config.get("user_prompt", "{input}")
-        input_text = self.state_config.get("input", "")
-        
-        # Se c'è un input specifico, usalo
-        if input_text:
-            formatted_input = self.format_recursive(input_text, variables)
-        else:
-            # Altrimenti cerca una variabile 'input' o usa il prompt direttamente
-            formatted_input = variables.get("input", user_prompt)
-        
-        return self.format_recursive(formatted_input, variables)
-    
+        user_prompt_template = self.state_config.get("user_prompt", "{input}")
+        # Formatta il template del prompt utente con le variabili usando il sistema migliorato
+        formatted_prompt = self.format_recursive(user_prompt_template, variables)
+        logger.debug(f"Prompt formattato: {formatted_prompt}")  # Debug: mostra il prompt formattato
+        # Se 'input' è una chiave specifica nella configurazione, il suo valore formattato ha la priorità
+        input_value = self.state_config.get("input")
+        if input_value:
+            return self.format_recursive(input_value, variables)
+
+        return formatted_prompt
+
     def execute(self, variables):
         logger.debug(f"Esecuzione LLM Agent '{self.name}' con configurazione: {self.state_config}")
         
         try:
-            # Inizializza componenti se non già fatto
             if self._llm is None:
                 self._initialize_llm(variables)
                 self._initialize_memory()
                 self._initialize_chain()
             
-            # Prepara l'input
             formatted_input = self._format_prompt(variables)
             
-            # Esegui la chain
             start_time = datetime.now()
             
-            if self.state_config.get("chain_type", "simple") == "conversation":
-                result = self._chain.predict(input=formatted_input)
-            else:
-                result = self._chain.run(input=formatted_input)
-            
+            # NOTA: .run() e .predict() sono deprecati in favore di .invoke()
+            # .invoke() accetta un dizionario e restituisce un dizionario
+            if isinstance(self._chain, ConversationChain):
+                # ConversationChain si aspetta 'input' nel dizionario
+                response_dict = self._chain.invoke({"input": formatted_input})
+                result = response_dict.get('response', '')
+            else: # Per LLMChain
+                response_dict = self._chain.invoke({"input": formatted_input})
+                result = response_dict.get('text', '')
+
             end_time = datetime.now()
             execution_time = (end_time - start_time).total_seconds()
             
             logger.info(f"LLM Agent completato in {execution_time:.2f}s")
             
-            # Prepara l'output
             output_data = {
                 "response": result,
                 "provider": self._get_provider_config()["provider"],
@@ -239,32 +255,28 @@ class LLMAgentState(BaseState):
                 "success": True
             }
             
-            # Salva l'output se specificato
             output_key = self.state_config.get("output")
             if output_key:
                 variables[output_key] = output_data
             
-            # Salva anche solo la risposta se specificato
             response_key = self.state_config.get("response_key", "llm_response")
             variables[response_key] = result
             
-            # Log del risultato (troncato se troppo lungo)
             result_preview = result[:200] + "..." if len(result) > 200 else result
             logger.info(f"LLM Response: {result_preview}")
             
             return self.state_config.get("success_transition", self.state_config.get("transition"))
             
         except Exception as e:
-            error_msg = f"Errore nell'esecuzione LLM Agent: {e}"
-            logger.error(error_msg)
+            error_msg = f"❌ Errore nell'esecuzione LLM Agent: {e}"
+            logger.error(error_msg, exc_info=True) # Aggiunto exc_info per un traceback completo
             
-            # Salva l'errore nell'output se specificato
             output_key = self.state_config.get("output")
             if output_key:
                 variables[output_key] = {
                     "success": False,
                     "error": str(e),
-                    "provider": self._get_provider_config()["provider"],
+                    "provider": self._get_provider_config().get("provider", "unknown"),
                     "timestamp": datetime.now().isoformat()
                 }
             
