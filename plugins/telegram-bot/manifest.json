@@ -1,0 +1,50 @@
+{
+  "name": "telegram-bot",
+  "version": "1.0.0",
+  "description": "Plugin per inviare messaggi tramite bot Telegram",
+  "author": "IntellyHub Team",
+  "dependencies": ["requests>=2.25.0"],
+  "states": [
+    {
+      "name": "telegram",
+      "class": "telegram_state.TelegramState",
+      "description": "Invia messaggi tramite bot Telegram"
+    }
+  ],
+  "listeners": [],
+  "config_schema": {
+    "telegram": {
+      "type": "object",
+      "properties": {
+        "bot_token": {
+          "type": "string",
+          "description": "Token del bot Telegram"
+        },
+        "chat_id": {
+          "type": "string",
+          "description": "ID della chat di destinazione"
+        },
+        "message": {
+          "type": "string",
+          "description": "Testo del messaggio da inviare"
+        },
+        "parse_mode": {
+          "type": "string",
+          "enum": ["HTML", "Markdown", "MarkdownV2"],
+          "default": "HTML",
+          "description": "Modalità di parsing del messaggio"
+        },
+        "disable_notification": {
+          "type": "boolean",
+          "default": false,
+          "description": "Disabilita notifica per il messaggio"
+        },
+        "output": {
+          "type": "string",
+          "description": "Nome variabile per salvare il risultato"
+        }
+      },
+      "required": ["bot_token", "chat_id", "message"]
+    }
+  }
+}
