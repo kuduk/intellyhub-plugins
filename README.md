@@ -171,23 +171,96 @@ plugins/nome_plugin/
 └── README.md         # Documentazione
 ```
 
-### Manifest.json
+### Manifest.json Standard
+
+Tutti i plugin seguono ora uno schema standardizzato per garantire coerenza e compatibilità:
 
 ```json
 {
   "name": "nome_plugin",
   "version": "1.0.0",
-  "description": "Descrizione del plugin",
-  "author": "Nome Autore",
+  "description": "Descrizione dettagliata del plugin e delle sue funzionalità",
+  "author": "IntellyHub Team",
   "license": "MIT",
-  "entry_file": "plugin_file.py",
+  "entry_file": "nome_plugin_state.py",
   "state_type": "nome_plugin",
+  "plugin_type": "state",
   "dependencies": {},
-  "requirements": ["requests>=2.25.0"],
+  "requirements": [
+    "requests>=2.25.0"
+  ],
   "api_version": "1.0",
-  "tags": ["categoria", "funzionalità"]
+  "tags": ["categoria", "funzionalità", "automazione"],
+  "documentation": {
+    "parameters": {
+      "parametro_obbligatorio": {
+        "type": "string",
+        "required": true,
+        "description": "Descrizione del parametro obbligatorio"
+      },
+      "parametro_opzionale": {
+        "type": "string",
+        "required": false,
+        "default": "valore_default",
+        "description": "Descrizione del parametro opzionale"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare il risultato"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "Esempio base",
+        "description": "Descrizione dell'esempio",
+        "config": {
+          "state_type": "nome_plugin",
+          "parametro_obbligatorio": "valore",
+          "transition": "next_step"
+        }
+      }
+    ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. Configurare eventuali API keys necessarie",
+      "3. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio"
+    ],
+    "environment_variables": [
+      "API_KEY - chiave API necessaria per il funzionamento"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
+  }
 }
 ```
+
+#### Parametri Standard per Tutti i Plugin
+
+Ogni plugin supporta ora questi parametri standardizzati:
+
+| Parametro | Tipo | Descrizione |
+|-----------|------|-------------|
+| `output` | string | Nome della variabile dove salvare il risultato dell'operazione |
+| `success_transition` | string | Stato successivo in caso di successo |
+| `error_transition` | string | Stato successivo in caso di errore |
 
 ## Creare un Nuovo Plugin
 

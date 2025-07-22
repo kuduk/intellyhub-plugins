@@ -137,14 +137,27 @@ Umidità: {humidity}%
 
 ## Parametri di configurazione
 
+### Parametri Obbligatori
+| Parametro | Tipo | Descrizione |
+|-----------|------|-------------|
+| `bot_token` | string | Token del bot Telegram per l'autenticazione con l'API |
+| `chat_id` | string | ID della chat di destinazione (può essere un ID utente, gruppo o canale) |
+| `message` | string | Testo del messaggio da inviare |
+
+### Parametri Opzionali
 | Parametro | Tipo | Default | Descrizione |
 |-----------|------|---------|-------------|
-| `bot_token` | string | - | Token del bot Telegram (obbligatorio) |
-| `chat_id` | string | - | ID della chat di destinazione (obbligatorio) |
-| `message` | string | - | Testo del messaggio da inviare (obbligatorio) |
 | `parse_mode` | string | "HTML" | Modalità di parsing: "HTML", "Markdown", "MarkdownV2" |
-| `disable_notification` | boolean | false | Disabilita la notifica sonora |
-| `output` | string | - | Nome variabile per salvare il risultato |
+| `disable_notification` | boolean | false | Disabilita la notifica sonora per il messaggio |
+| `disable_web_page_preview` | boolean | false | Disabilita l'anteprima dei link nel messaggio |
+| `reply_to_message_id` | integer | - | ID del messaggio a cui rispondere |
+
+### Parametri Standard (supportati da tutti i plugin)
+| Parametro | Tipo | Descrizione |
+|-----------|------|-------------|
+| `output` | string | Nome della variabile dove salvare il risultato dell'operazione |
+| `success_transition` | string | Stato successivo in caso di successo |
+| `error_transition` | string | Stato successivo in caso di errore |
 
 ## Formattazione messaggi
 

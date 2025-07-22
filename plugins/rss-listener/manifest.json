@@ -31,6 +31,21 @@
         "required": false,
         "default": 10,
         "description": "Numero massimo di articoli da processare per ogni feed ad ogni controllo"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare informazioni del listener"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo nell'avvio del listener"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore nell'avvio del listener"
       }
     },
     "variables_injected": {

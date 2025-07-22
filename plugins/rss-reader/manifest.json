@@ -1,7 +1,7 @@
 {
   "name": "rss-reader",
   "version": "1.0.0",
-  "description": "Plugin per leggere feed RSS e filtrare articoli per data con oggetto Python strutturato",
+  "description": "Plugin per leggere feed RSS e filtrare articoli per data con oggetto Python strutturato. Supporta filtri temporali e limitazione del numero di articoli.",
   "author": "IntellyHub Team",
   "license": "MIT",
   "entry_file": "rss_reader_state.py",
@@ -11,39 +11,149 @@
     "feedparser>=6.0.0"
   ],
   "api_version": "1.0",
-  "tags": [
-    "rss",
-    "feed",
-    "news",
-    "reader",
-    "automation",
-    "filtering"
-  ],
-  "parameters": {
-    "required": [
-      "feed_url"
-    ],
-    "optional": [
-      "lookback_hours",
-      "max_entries",
-      "output_variable",
-      "transition"
+  "tags": ["rss", "feed", "news", "reader", "automation", "filtering"],
+  "documentation": {
+    "parameters": {
+      "feed_url": {
+        "type": "string",
+        "required": true,
+        "description": "URL del feed RSS da leggere"
+      },
+      "lookback_hours": {
+        "type": "integer",
+        "required": false,
+        "default": 24,
+        "description": "Numero di ore indietro per filtrare gli articoli (default: 24 ore)"
+      },
+      "max_entries": {
+        "type": "integer",
+        "required": false,
+        "default": 10,
+        "description": "Numero massimo di articoli da restituire"
+      },
+      "include_content": {
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Se includere il contenuto completo degli articoli quando disponibile"
+      },
+      "filter_keywords": {
+        "type": "array",
+        "required": false,
+        "description": "Lista di parole chiave per filtrare gli articoli (ricerca in titolo e descrizione)"
+      },
+      "exclude_keywords": {
+        "type": "array",
+        "required": false,
+        "description": "Lista di parole chiave da escludere dagli articoli"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "default": "rss_result",
+        "description": "Nome della variabile dove salvare il risultato dell'operazione"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "output_format": {
+      "type": "RSSFeedResult",
+      "description": "Oggetto strutturato contenente informazioni del feed e articoli filtrati",
+      "properties": {
+        "feed_info": {
+          "title": "Titolo del feed",
+          "description": "Descrizione del feed",
+          "link": "URL del sito web",
+          "language": "Lingua del feed",
+          "updated": "Data ultimo aggiornamento"
+        },
+        "articles": {
+          "type": "array",
+          "description": "Lista degli articoli filtrati",
+          "item_properties": {
+            "title": "Titolo dell'articolo",
+            "link": "URL dell'articolo",
+            "description": "Descrizione/sommario",
+            "content": "Contenuto completo (se disponibile)",
+            "author": "Autore dell'articolo",
+            "published": "Data di pubblicazione (ISO format)",
+            "tags": "Lista dei tag/categorie",
+            "id": "ID univoco dell'articolo"
+          }
+        },
+        "statistics": {
+          "total_entries": "Numero totale di articoli nel feed",
+          "filtered_entries": "Numero di articoli dopo il filtro temporale",
+          "returned_entries": "Numero di articoli restituiti",
+          "oldest_entry": "Data dell'articolo più vecchio",
+          "newest_entry": "Data dell'articolo più recente"
+        }
+      }
+    },
+    "examples": [
+      {
+        "name": "Lettura RSS semplice",
+        "description": "Legge un feed RSS delle ultime 24 ore",
+        "config": {
+          "state_type": "rss_reader",
+          "feed_url": "https://feeds.feedburner.com/oreilly/radar",
+          "lookback_hours": 24,
+          "max_entries": 10,
+          "output": "rss_articles",
+          "transition": "process_articles"
+        }
+      },
+      {
+        "name": "Filtro per parole chiave",
+        "description": "Filtra articoli per parole chiave specifiche",
+        "config": {
+          "state_type": "rss_reader",
+          "feed_url": "https://rss.cnn.com/rss/edition.rss",
+          "lookback_hours": 12,
+          "max_entries": 20,
+          "filter_keywords": ["AI", "technology", "innovation"],
+          "exclude_keywords": ["politics", "sports"],
+          "output": "tech_news",
+          "success_transition": "analyze_news",
+          "error_transition": "handle_error"
+        }
+      },
+      {
+        "name": "Lettura completa con contenuto",
+        "description": "Legge articoli includendo il contenuto completo",
+        "config": {
+          "state_type": "rss_reader",
+          "feed_url": "https://feeds.feedburner.com/oreilly/radar",
+          "lookback_hours": 48,
+          "max_entries": 5,
+          "include_content": true,
+          "output": "full_articles",
+          "transition": "next_step"
+        }
+      }
     ]
   },
-  "output": {
-    "type": "RSSFeedResult",
-    "description": "Oggetto strutturato contenente feed info, articoli filtrati e statistiche"
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. La dipendenza feedparser verrà installata automaticamente",
+      "3. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio:",
+      "✅ Stato 'rss_reader' registrato dalla classe RSSReaderState"
+    ]
   },
-  "examples": [
-    {
-      "name": "Basic RSS Reading",
-      "description": "Legge un feed RSS delle ultime 24 ore",
-      "yaml": "diagrammi/test_rss_reader.yaml"
-    },
-    {
-      "name": "Simple Filtering",
-      "description": "Filtra articoli per parole chiave",
-      "yaml": "diagrammi/test_rss_reader_simple.yaml"
-    }
-  ]
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
+  }
 }

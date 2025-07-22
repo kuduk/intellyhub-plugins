@@ -1,50 +1,148 @@
 {
   "name": "telegram-bot",
   "version": "1.0.0",
-  "description": "Plugin per inviare messaggi tramite bot Telegram",
+  "description": "Plugin per inviare messaggi tramite bot Telegram. Supporta formattazione HTML/Markdown e configurazioni avanzate per notifiche.",
   "author": "IntellyHub Team",
-  "dependencies": ["requests>=2.25.0"],
-  "states": [
-    {
-      "name": "telegram",
-      "class": "telegram_state.TelegramState",
-      "description": "Invia messaggi tramite bot Telegram"
-    }
+  "license": "MIT",
+  "entry_file": "telegram_state.py",
+  "state_type": "telegram",
+  "dependencies": {},
+  "requirements": [
+    "requests>=2.25.0"
   ],
-  "listeners": [],
-  "config_schema": {
-    "telegram": {
-      "type": "object",
-      "properties": {
-        "bot_token": {
-          "type": "string",
-          "description": "Token del bot Telegram"
-        },
-        "chat_id": {
-          "type": "string",
-          "description": "ID della chat di destinazione"
-        },
-        "message": {
-          "type": "string",
-          "description": "Testo del messaggio da inviare"
-        },
-        "parse_mode": {
-          "type": "string",
-          "enum": ["HTML", "Markdown", "MarkdownV2"],
-          "default": "HTML",
-          "description": "Modalità di parsing del messaggio"
-        },
-        "disable_notification": {
-          "type": "boolean",
-          "default": false,
-          "description": "Disabilita notifica per il messaggio"
-        },
-        "output": {
-          "type": "string",
-          "description": "Nome variabile per salvare il risultato"
+  "api_version": "1.0",
+  "tags": ["telegram", "messaging", "bot", "notification", "automation"],
+  "documentation": {
+    "parameters": {
+      "bot_token": {
+        "type": "string",
+        "required": true,
+        "description": "Token del bot Telegram per l'autenticazione con l'API"
+      },
+      "chat_id": {
+        "type": "string",
+        "required": true,
+        "description": "ID della chat di destinazione (può essere un ID utente, gruppo o canale)"
+      },
+      "message": {
+        "type": "string",
+        "required": true,
+        "description": "Testo del messaggio da inviare"
+      },
+      "parse_mode": {
+        "type": "string",
+        "required": false,
+        "default": "HTML",
+        "description": "Modalità di parsing del messaggio",
+        "enum": ["HTML", "Markdown", "MarkdownV2"]
+      },
+      "disable_notification": {
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Disabilita la notifica sonora per il messaggio"
+      },
+      "disable_web_page_preview": {
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Disabilita l'anteprima dei link nel messaggio"
+      },
+      "reply_to_message_id": {
+        "type": "integer",
+        "required": false,
+        "description": "ID del messaggio a cui rispondere"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare il risultato dell'operazione"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "Messaggio semplice",
+        "description": "Invia un messaggio di testo semplice",
+        "config": {
+          "state_type": "telegram",
+          "bot_token": "{telegram_bot_token}",
+          "chat_id": "{chat_id}",
+          "message": "Ciao! Questo è un messaggio di test.",
+          "transition": "next_step"
         }
       },
-      "required": ["bot_token", "chat_id", "message"]
-    }
+      {
+        "name": "Messaggio con formattazione HTML",
+        "description": "Invia un messaggio con formattazione HTML",
+        "config": {
+          "state_type": "telegram",
+          "bot_token": "{telegram_bot_token}",
+          "chat_id": "{chat_id}",
+          "message": "<b>Messaggio importante!</b>\n\n<i>Questo è in corsivo</i>\n\n<code>Codice inline</code>",
+          "parse_mode": "HTML",
+          "output": "telegram_result",
+          "success_transition": "success",
+          "error_transition": "handle_error"
+        }
+      },
+      {
+        "name": "Notifica silenziosa",
+        "description": "Invia un messaggio senza notifica sonora",
+        "config": {
+          "state_type": "telegram",
+          "bot_token": "{telegram_bot_token}",
+          "chat_id": "{chat_id}",
+          "message": "Messaggio silenzioso - nessuna notifica sonora",
+          "disable_notification": true,
+          "disable_web_page_preview": true,
+          "transition": "next_step"
+        }
+      },
+      {
+        "name": "Risposta a messaggio",
+        "description": "Risponde a un messaggio specifico",
+        "config": {
+          "state_type": "telegram",
+          "bot_token": "{telegram_bot_token}",
+          "chat_id": "{chat_id}",
+          "message": "Questa è una risposta al tuo messaggio!",
+          "reply_to_message_id": 123,
+          "output": "reply_result",
+          "transition": "next_step"
+        }
+      }
+    ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. La dipendenza requests verrà installata automaticamente",
+      "3. Creare un bot Telegram tramite @BotFather su Telegram",
+      "4. Ottenere il token del bot e l'ID della chat di destinazione",
+      "5. Configurare le credenziali nel workflow o nelle variabili d'ambiente",
+      "6. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio:",
+      "✅ Stato 'telegram' registrato dalla classe TelegramState"
+    ],
+    "environment_variables": [
+      "TELEGRAM_BOT_TOKEN - token del bot Telegram",
+      "TELEGRAM_CHAT_ID - ID della chat di destinazione"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
   }
 }
