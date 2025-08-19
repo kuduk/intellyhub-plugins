@@ -51,6 +51,17 @@
         "required": false,
         "description": "Lista di parole chiave da escludere dagli articoli"
       },
+      "timeout": {
+        "type": "integer",
+        "required": false,
+        "default": 30,
+        "description": "Timeout in secondi per le richieste HTTP (default: 30)"
+      },
+      "user_agent": {
+        "type": "string",
+        "required": false,
+        "description": "User-Agent personalizzato per le richieste HTTP"
+      },
       "output": {
         "type": "string",
         "required": false,
