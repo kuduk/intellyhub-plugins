@@ -6,7 +6,6 @@
   "license": "MIT",
   "entry_file": "python_code_generator_state.py",
   "state_type": "python_code_generator",
-  "plugin_type": "state",
   "dependencies": {},
   "requirements": [
     "langchain>=0.1.0",

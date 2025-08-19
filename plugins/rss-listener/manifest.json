@@ -11,6 +11,10 @@
   "requirements": [
     "feedparser>=6.0.0"
   ],
+  "optional_requirements": [
+    "python-dateutil>=2.8.0",
+    "pytz>=2021.1"
+  ],
   "api_version": "1.0",
   "tags": ["rss", "feed", "listener", "automation", "news", "monitoring"],
   "documentation": {
@@ -157,12 +161,21 @@
     "instructions": [
       "1. Il plugin verrà installato automaticamente in flow/listeners/",
       "2. La dipendenza feedparser verrà installata automaticamente",
-      "3. Riavviare l'applicazione per caricare il plugin",
-      "4. Configurare il listener nel file YAML con type: 'rsslistener'"
+      "3. Per funzionalità avanzate di parsing date, installare dipendenze opzionali:",
+      "   - pip install python-dateutil pytz",
+      "4. Configurare il listener nel file YAML con type: 'rsslistener'",
+      "5. Riavviare l'applicazione per caricare il plugin"
     ],
     "post_install": [
       "Verificare che il listener sia caricato nei log di avvio:",
       "✅ Listener 'RSSListener' scoperto e registrato con ID: 'rsslistener'"
+    ],
+    "environment_variables": [
+      "RSS_USER_AGENT - User-Agent personalizzato per le richieste HTTP (opzionale)"
     ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
   }
 }

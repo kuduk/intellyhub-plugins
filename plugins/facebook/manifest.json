@@ -10,6 +10,9 @@
   "requirements": [
     "requests>=2.25.0"
   ],
+  "optional_requirements": [
+    "python-dateutil>=2.8.0"
+  ],
   "api_version": "1.0",
   "tags": ["social", "facebook", "posting", "automation"],
   "documentation": {
@@ -94,5 +97,31 @@
         }
       }
     ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. La dipendenza requests verrà installata automaticamente",
+      "3. Creare un'app Facebook e ottenere un token di accesso:",
+      "   - Vai su https://developers.facebook.com/",
+      "   - Crea una nuova app",
+      "   - Aggiungi il prodotto 'Facebook Login'",
+      "   - Genera un token di accesso per la pagina",
+      "4. Ottenere l'ID della pagina Facebook di destinazione",
+      "5. Configurare le credenziali nel workflow o nelle variabili d'ambiente",
+      "6. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio:",
+      "✅ Stato 'facebook' registrato dalla classe FacebookState"
+    ],
+    "environment_variables": [
+      "FACEBOOK_ACCESS_TOKEN - token di accesso Facebook",
+      "FACEBOOK_PAGE_ID - ID della pagina Facebook"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
   }
 }

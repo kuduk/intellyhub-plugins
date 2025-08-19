@@ -10,6 +10,10 @@
   "requirements": [
     "requests>=2.25.0"
   ],
+  "optional_requirements": [
+    "pydub>=0.25.0",
+    "pygame>=2.1.0"
+  ],
   "api_version": "1.0",
   "tags": ["audio", "tts", "text-to-speech", "elevenlabs", "voice", "automation"],
   "documentation": {
@@ -130,5 +134,32 @@
         "Thomas": "GBv7mTt0atIp3Br8iCZE"
       }
     }
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. La dipendenza requests verrà installata automaticamente",
+      "3. Creare un account ElevenLabs e ottenere una API key:",
+      "   - Vai su https://elevenlabs.io/",
+      "   - Registrati o accedi al tuo account",
+      "   - Vai su Profile & API Key",
+      "   - Copia la tua API key",
+      "4. Per funzionalità avanzate, installare dipendenze opzionali:",
+      "   - Manipolazione audio: pip install pydub",
+      "   - Riproduzione audio: pip install pygame",
+      "5. Configurare l'API key nelle variabili d'ambiente o nel workflow",
+      "6. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio:",
+      "✅ Stato 'text_to_speech' registrato dalla classe TextToSpeechState"
+    ],
+    "environment_variables": [
+      "ELEVENLABS_API_KEY - API key di ElevenLabs per l'autenticazione"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
   }
 }

@@ -10,6 +10,10 @@
   "requirements": [
     "requests>=2.25.0"
   ],
+  "optional_requirements": [
+    "python-telegram-bot>=20.0",
+    "emoji>=2.0.0"
+  ],
   "api_version": "1.0",
   "tags": ["telegram", "messaging", "bot", "notification", "automation"],
   "documentation": {
@@ -34,7 +38,7 @@
         "required": false,
         "default": "HTML",
         "description": "Modalità di parsing del messaggio",
-        "enum": ["HTML", "Markdown", "MarkdownV2"]
+        "options": ["HTML", "Markdown", "MarkdownV2"]
       },
       "disable_notification": {
         "type": "boolean",
@@ -127,8 +131,14 @@
     "instructions": [
       "1. Il plugin verrà installato automaticamente in flow/states/",
       "2. La dipendenza requests verrà installata automaticamente",
-      "3. Creare un bot Telegram tramite @BotFather su Telegram",
-      "4. Ottenere il token del bot e l'ID della chat di destinazione",
+      "3. Creare un bot Telegram tramite @BotFather su Telegram:",
+      "   - Invia /newbot a @BotFather",
+      "   - Scegli un nome e username per il bot",
+      "   - Copia il token fornito da BotFather",
+      "4. Ottenere l'ID della chat di destinazione:",
+      "   - Per chat private: usa il tuo user ID",
+      "   - Per gruppi: aggiungi il bot al gruppo e usa l'ID del gruppo",
+      "   - Per canali: usa l'username del canale (es. @miocanale)",
       "5. Configurare le credenziali nel workflow o nelle variabili d'ambiente",
       "6. Riavviare l'applicazione per caricare il plugin"
     ],

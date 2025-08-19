@@ -14,6 +14,12 @@
     "langchain>=0.1.0",
     "fake-useragent>=1.1.0"
   ],
+  "optional_requirements": [
+    "langchain-openai>=0.1.8",
+    "langchain-anthropic>=0.1.15",
+    "webdriver-manager>=3.8.0",
+    "undetected-chromedriver>=3.4.0"
+  ],
   "api_version": "1.0",
   "tags": ["linkedin", "scraping", "social", "automation", "llm", "data-extraction"],
   "documentation": {
@@ -22,7 +28,7 @@
         "type": "string",
         "required": true,
         "description": "Tipo di ricerca: 'people' per profili persone, 'companies' per aziende",
-        "enum": ["people", "companies"]
+        "options": ["people", "companies"]
       },
       "search_query": {
         "type": "string",
@@ -55,11 +61,13 @@
       "max_results": {
         "type": "integer",
         "required": false,
+        "default": 10,
         "description": "Numero massimo di risultati da estrarre (default: 10)"
       },
       "use_selenium": {
         "type": "boolean",
         "required": false,
+        "default": false,
         "description": "Usa Selenium per JavaScript rendering (default: false)"
       },
       "selenium_options": {
@@ -101,7 +109,7 @@
           "analysis_type": {
             "type": "string",
             "description": "Tipo di analisi: 'summary', 'classification', 'insights'",
-            "enum": ["summary", "classification", "insights"]
+            "options": ["summary", "classification", "insights"]
           },
           "custom_prompt": {
             "type": "string",
@@ -187,5 +195,34 @@
         }
       }
     ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. Le dipendenze base verranno installate automaticamente",
+      "3. Per Selenium, installare ChromeDriver:",
+      "   - Automatico: pip install webdriver-manager",
+      "   - Manuale: Scaricare da https://chromedriver.chromium.org/",
+      "4. Per funzionalità LLM, installare provider specifici:",
+      "   - OpenAI: pip install langchain-openai",
+      "   - Anthropic: pip install langchain-anthropic",
+      "5. Configurare le API keys se si usa l'analisi LLM",
+      "6. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio:",
+      "✅ Stato 'linkedin' registrato dalla classe LinkedInState"
+    ],
+    "environment_variables": [
+      "OPENAI_API_KEY - per analisi LLM con OpenAI",
+      "ANTHROPIC_API_KEY - per analisi LLM con Anthropic",
+      "LINKEDIN_EMAIL - email LinkedIn (opzionale per autenticazione)",
+      "LINKEDIN_PASSWORD - password LinkedIn (opzionale per autenticazione)"
+    ]
+  },
+  "compatibility": {
+    "langchain_version": ">=0.1.0",
+    "python_version": ">=3.8",
+    "platforms": ["linux", "macos", "windows"]
   }
 }
