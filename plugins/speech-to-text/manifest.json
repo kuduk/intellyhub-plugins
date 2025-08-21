@@ -1,0 +1,194 @@
+{
+  "name": "speech-to-text",
+  "version": "1.0.0",
+  "description": "Plugin per convertire audio in testo utilizzando OpenAI Whisper API. Supporta diversi formati audio e lingue con rilevamento automatico della lingua.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "speech_to_text_state.py",
+  "state_type": "speech_to_text",
+  "plugin_type": "state",
+  "dependencies": {},
+  "requirements": [
+    "requests>=2.25.0",
+    "openai>=1.0.0"
+  ],
+  "api_version": "1.0",
+  "tags": ["audio", "stt", "speech-to-text", "whisper", "transcription", "automation", "openai"],
+  "documentation": {
+    "parameters": {
+      "api_key": {
+        "type": "string",
+        "required": true,
+        "description": "API key di OpenAI per l'autenticazione. Usa {OPENAI_API_KEY} per la variabile d'ambiente"
+      },
+      "audio_file": {
+        "type": "string",
+        "required": true,
+        "description": "Percorso del file audio locale o URL remoto da trascrivere"
+      },
+      "language": {
+        "type": "string",
+        "required": false,
+        "default": "auto",
+        "description": "Codice lingua ISO 639-1 (es. 'it', 'en', 'fr'). Usa 'auto' per rilevamento automatico"
+      },
+      "model": {
+        "type": "string",
+        "required": false,
+        "default": "whisper-1",
+        "description": "Modello Whisper da utilizzare"
+      },
+      "response_format": {
+        "type": "string",
+        "required": false,
+        "default": "json",
+        "description": "Formato della risposta",
+        "enum": ["json", "text", "srt", "verbose_json", "vtt"]
+      },
+      "temperature": {
+        "type": "float",
+        "required": false,
+        "default": 0.0,
+        "description": "Controllo della creatività della trascrizione (0.0-1.0)"
+      },
+      "workspace_path": {
+        "type": "string",
+        "required": false,
+        "default": "workspace",
+        "description": "Percorso della cartella workspace per file temporanei"
+      },
+      "prompt": {
+        "type": "string",
+        "required": false,
+        "description": "Prompt opzionale per guidare il modello nella trascrizione"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare il risultato della trascrizione"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "Trascrizione semplice",
+        "description": "Trascrizione di base di un file audio locale",
+        "config": {
+          "state_type": "speech_to_text",
+          "api_key": "{OPENAI_API_KEY}",
+          "audio_file": "workspace/recording.mp3",
+          "output": "transcription",
+          "transition": "process_text"
+        }
+      },
+      {
+        "name": "Trascrizione con lingua specifica",
+        "description": "Trascrizione forzando una lingua specifica",
+        "config": {
+          "state_type": "speech_to_text",
+          "api_key": "{OPENAI_API_KEY}",
+          "audio_file": "workspace/italian_audio.wav",
+          "language": "it",
+          "response_format": "verbose_json",
+          "output": "detailed_transcription",
+          "success_transition": "analyze_text",
+          "error_transition": "handle_error"
+        }
+      },
+      {
+        "name": "Trascrizione da URL remoto",
+        "description": "Trascrizione di un file audio da URL con prompt personalizzato",
+        "config": {
+          "state_type": "speech_to_text",
+          "api_key": "{OPENAI_API_KEY}",
+          "audio_file": "https://example.com/audio.mp3",
+          "language": "en",
+          "prompt": "This is a technical presentation about AI and machine learning.",
+          "temperature": 0.1,
+          "response_format": "srt",
+          "output": "subtitle_transcription",
+          "transition": "save_subtitles"
+        }
+      },
+      {
+        "name": "Trascrizione multilingue automatica",
+        "description": "Trascrizione con rilevamento automatico della lingua",
+        "config": {
+          "state_type": "speech_to_text",
+          "api_key": "{OPENAI_API_KEY}",
+          "audio_file": "{audio_path}",
+          "language": "auto",
+          "response_format": "verbose_json",
+          "workspace_path": "audio_workspace",
+          "output": "multilingual_result",
+          "success_transition": "language_detected",
+          "error_transition": "transcription_failed"
+        }
+      }
+    ],
+    "supported_formats": {
+      "description": "Formati audio supportati da OpenAI Whisper",
+      "formats": [
+        "mp3", "mp4", "mpeg", "mpga", "m4a", "wav", "webm", "flac", "ogg"
+      ],
+      "max_file_size": "25MB per file"
+    },
+    "language_codes": {
+      "description": "Alcuni codici lingua supportati",
+      "languages": {
+        "Italiano": "it",
+        "Inglese": "en",
+        "Francese": "fr",
+        "Tedesco": "de",
+        "Spagnolo": "es",
+        "Portoghese": "pt",
+        "Russo": "ru",
+        "Giapponese": "ja",
+        "Cinese": "zh",
+        "Arabo": "ar",
+        "Hindi": "hi",
+        "Coreano": "ko"
+      }
+    }
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente",
+      "2. Configurare la variabile d'ambiente OPENAI_API_KEY",
+      "3. Verificare che i file audio siano nei formati supportati",
+      "4. Riavviare l'applicazione"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log",
+      "Testare con un file audio di esempio",
+      "Controllare che la cartella workspace sia accessibile"
+    ],
+    "environment_variables": [
+      "OPENAI_API_KEY - Chiave API OpenAI necessaria per Whisper"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
+  },
+  "performance": {
+    "typical_execution_time": "2-10 secondi per minuto di audio",
+    "memory_usage": "Moderato (dipende dalla dimensione del file)",
+    "token_usage": "Non applicabile (usa API Whisper, non GPT)",
+    "concurrent_executions": "Supportato (limitato dalle quote API OpenAI)"
+  },
+  "security": {
+    "code_execution": "Nessuna esecuzione di codice arbitrario",
+    "input_validation": "Validazione formato file e dimensione",
+    "output_filtering": "Output sanitizzato da OpenAI Whisper"
+  }
+}
