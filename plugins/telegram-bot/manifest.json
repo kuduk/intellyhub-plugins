@@ -5,7 +5,7 @@
   "author": "IntellyHub Team",
   "license": "MIT",
   "entry_file": "telegram_state.py",
-  "state_type": "telegram",
+  "state_type": "telegram_bot",
   "dependencies": {},
   "requirements": [
     "requests>=2.25.0"
