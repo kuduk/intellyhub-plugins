@@ -4,7 +4,7 @@
   "description": "Plugin per inviare messaggi tramite bot Telegram. Supporta formattazione HTML/Markdown e configurazioni avanzate per notifiche.",
   "author": "IntellyHub Team",
   "license": "MIT",
-  "entry_file": "telegram_state.py",
+  "entry_file": "telegram-bot_state.py",
   "state_type": "telegram_bot",
   "dependencies": {},
   "requirements": [

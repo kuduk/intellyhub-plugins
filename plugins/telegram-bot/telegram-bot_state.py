@@ -11,13 +11,15 @@ from flow.states.base_state import BaseState
 logger = logging.getLogger(__name__)
 
 class TelegramState(BaseState):
+    state_type = "telegram-bot"
+    
     """
     Stato per inviare messaggi tramite bot Telegram
     
     Configurazione YAML:
     ```yaml
     send_telegram:
-      state_type: telegram
+      state_type: telegram-bot
       bot_token: "{TELEGRAM_BOT_TOKEN}"
       chat_id: "{TELEGRAM_CHAT_ID}"
       message: "Testo del messaggio"
@@ -29,11 +31,11 @@ class TelegramState(BaseState):
     
     def __init__(self, name: str, config: Dict[str, Any], global_context: Dict[str, Any]):
         super().__init__(name, config, global_context)
-        self.bot_token = self.config.get('bot_token')
-        self.chat_id = self.config.get('chat_id')
-        self.message = self.config.get('message', '')
-        self.parse_mode = self.config.get('parse_mode', 'HTML')
-        self.disable_notification = self.config.get('disable_notification', False)
+        self.bot_token = self.state_config.get('bot_token')
+        self.chat_id = self.state_config.get('chat_id')
+        self.message = self.state_config.get('message', '')
+        self.parse_mode = self.state_config.get('parse_mode', 'HTML')
+        self.disable_notification = self.state_config.get('disable_notification', False)
         
     def execute(self, variables: Dict[str, Any]) -> str:
         """
@@ -75,45 +77,45 @@ class TelegramState(BaseState):
                 logger.info(f"✅ Messaggio inviato con successo (ID: {message_id})")
                 
                 # Salva info nella variabile di output se specificata
-                if self.config.get('output'):
-                    variables[self.config['output']] = {
+                if self.state_config.get('output'):
+                    variables[self.state_config['output']] = {
                         'success': True,
                         'message_id': message_id,
                         'chat_id': resolved_chat_id,
                         'timestamp': result['result']['date']
                     }
                     
-                return self.config.get('success_transition', self.config.get('transition'))
+                return self.state_config.get('success_transition', self.state_config.get('transition'))
             else:
                 error_msg = result.get('description', 'Errore sconosciuto')
                 logger.error(f"❌ Errore Telegram: {error_msg}")
                 
-                if self.config.get('output'):
-                    variables[self.config['output']] = {
+                if self.state_config.get('output'):
+                    variables[self.state_config['output']] = {
                         'success': False,
                         'error': error_msg
                     }
                     
-                return self.config.get('error_transition', 'error')
+                return self.state_config.get('error_transition', 'error')
                 
         except requests.exceptions.Timeout:
             logger.error("❌ Timeout nell'invio del messaggio Telegram")
-            return self.config.get('error_transition', 'error')
+            return self.state_config.get('error_transition', 'error')
             
         except requests.exceptions.RequestException as e:
             logger.error(f"❌ Errore di rete Telegram: {e}")
-            return self.config.get('error_transition', 'error')
+            return self.state_config.get('error_transition', 'error')
             
         except Exception as e:
             logger.error(f"❌ Errore inaspettato: {e}")
-            return self.config.get('error_transition', 'error')
+            return self.state_config.get('error_transition', 'error')
     
     def validate_config(self) -> bool:
         """
         Valida la configurazione dello stato
         """
         required_fields = ['bot_token', 'chat_id', 'message']
-        missing_fields = [field for field in required_fields if not self.config.get(field)]
+        missing_fields = [field for field in required_fields if not self.state_config.get(field)]
         
         if missing_fields:
             raise ValueError(f"Campi mancanti in telegram state: {', '.join(missing_fields)}")
