@@ -1,0 +1,61 @@
+# Esempio base di utilizzo del plugin WeChat Work
+# Invia un messaggio semplice a tutti gli utenti dell'applicazione
+
+variables:
+  # Credenziali WeChat Work (da variabili d'ambiente)
+  corp_id: "{WECHAT_CORP_ID}"
+  corp_secret: "{WECHAT_CORP_SECRET}"
+  agent_id: "{WECHAT_AGENT_ID}"
+  
+  # Messaggio da inviare
+  notification_message: "🚀 Sistema IntellyHub avviato con successo!"
+  current_time: "{import datetime; datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+
+states:
+  # Stato iniziale - prepara il messaggio
+  prepare_message:
+    state_type: command
+    action:
+      eval: |
+        print("📋 Preparazione invio notifica WeChat Work...")
+        print(f"Timestamp: {current_time}")
+    transition: send_notification
+  
+  # Invia la notifica WeChat Work
+  send_notification:
+    state_type: wechat
+    corp_id: "{corp_id}"
+    corp_secret: "{corp_secret}"
+    agent_id: "{agent_id}"
+    to_user: "@all"  # Invia a tutti gli utenti
+    message: "{notification_message}\n\nTimestamp: {current_time}"
+    message_type: "text"
+    output: "wechat_result"
+    success_transition: "log_success"
+    error_transition: "handle_error"
+  
+  # Gestione successo
+  log_success:
+    state_type: command
+    action:
+      eval: |
+        print("✅ Notifica WeChat Work inviata con successo!")
+        print(f"Message ID: {wechat_result.get('msgid', 'N/A')}")
+        print(f"Timestamp: {wechat_result.get('timestamp', 'N/A')}")
+    transition: end
+  
+  # Gestione errori
+  handle_error:
+    state_type: command
+    action:
+      eval: |
+        print("❌ Errore nell'invio della notifica WeChat Work")
+        print(f"Errore: {wechat_result.get('error', 'Errore sconosciuto')}")
+        if 'errcode' in wechat_result:
+            print(f"Codice errore WeChat: {wechat_result['errcode']}")
+            print(f"Messaggio errore: {wechat_result.get('errmsg', 'N/A')}")
+    transition: end
+  
+  # Stato finale
+  end:
+    state_type: end

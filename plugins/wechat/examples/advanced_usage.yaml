@@ -1,0 +1,170 @@
+# Esempio avanzato del plugin WeChat Work
+# Dimostra l'uso di diversi tipi di messaggio e destinatari
+
+variables:
+  # Credenziali WeChat Work
+  corp_id: "{WECHAT_CORP_ID}"
+  corp_secret: "{WECHAT_CORP_SECRET}"
+  agent_id: "{WECHAT_AGENT_ID}"
+  
+  # Dati del sistema
+  system_status: "ONLINE"
+  cpu_usage: "45%"
+  memory_usage: "67%"
+  disk_usage: "23%"
+  active_users: "142"
+  
+  # Configurazione destinatari
+  manager_user: "{WECHAT_MANAGER_USER}"
+  it_department: "1"  # ID dipartimento IT
+  
+  # Timestamp
+  report_time: "{import datetime; datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+
+states:
+  # 1. Invia rapporto markdown a tutti
+  send_system_report:
+    state_type: wechat
+    corp_id: "{corp_id}"
+    corp_secret: "{corp_secret}"
+    agent_id: "{agent_id}"
+    to_user: "@all"
+    message: |
+      # 📊 Rapporto Sistema IntellyHub
+      
+      **Status Sistema**: {system_status} ✅
+      **Timestamp**: {report_time}
+      
+      ## 📈 Metriche Performance
+      - **CPU**: {cpu_usage}
+      - **Memoria**: {memory_usage}  
+      - **Disco**: {disk_usage}
+      - **Utenti Attivi**: {active_users}
+      
+      ## 🔗 Link Utili
+      [Dashboard](https://dashboard.intellyhub.com) | [Logs](https://logs.intellyhub.com)
+      
+      ---
+      *Rapporto generato automaticamente da IntellyHub*
+    message_type: "markdown"
+    output: "report_result"
+    success_transition: "check_report_status"
+    error_transition: "handle_report_error"
+  
+  # 2. Controlla se il rapporto è stato inviato
+  check_report_status:
+    state_type: if
+    condition: "{report_result.success}"
+    true_transition: "send_manager_alert"
+    false_transition: "handle_report_error"
+  
+  # 3. Invia alert specifico al manager (messaggio confidenziale)
+  send_manager_alert:
+    state_type: wechat
+    corp_id: "{corp_id}"
+    corp_secret: "{corp_secret}"
+    agent_id: "{agent_id}"
+    to_user: "{manager_user}"
+    message: |
+      🚨 ALERT MANAGER - Sistema IntellyHub
+      
+      Il sistema ha generato un rapporto automatico.
+      Memoria al {memory_usage} - monitorare attentamente.
+      
+      Dettagli completi nel rapporto generale.
+      
+      Timestamp: {report_time}
+    message_type: "text"
+    safe: 1  # Messaggio confidenziale
+    output: "manager_result"
+    success_transition: "send_it_notification"
+    error_transition: "handle_manager_error"
+  
+  # 4. Invia notifica textcard al dipartimento IT
+  send_it_notification:
+    state_type: wechat
+    corp_id: "{corp_id}"
+    corp_secret: "{corp_secret}"
+    agent_id: "{agent_id}"
+    to_party: "{it_department}"
+    message: |
+      {
+        "title": "🔧 Notifica IT - Sistema IntellyHub",
+        "description": "Sistema operativo al {system_status}. CPU: {cpu_usage}, RAM: {memory_usage}. Tutti i servizi funzionano correttamente. Clicca per accedere al pannello di controllo.",
+        "url": "https://admin.intellyhub.com/dashboard",
+        "btntxt": "Apri Dashboard"
+      }
+    message_type: "textcard"
+    output: "it_result"
+    success_transition: "send_summary"
+    error_transition: "handle_it_error"
+  
+  # 5. Invia riepilogo finale
+  send_summary:
+    state_type: wechat
+    corp_id: "{corp_id}"
+    corp_secret: "{corp_secret}"
+    agent_id: "{agent_id}"
+    to_user: "@all"
+    message: |
+      ✅ **Notifiche Sistema Completate**
+      
+      - Rapporto generale: ✅ Inviato
+      - Alert manager: ✅ Inviato  
+      - Notifica IT: ✅ Inviata
+      
+      Tutti i sistemi operativi. Prossimo rapporto tra 1 ora.
+    message_type: "markdown"
+    output: "summary_result"
+    success_transition: "log_completion"
+    error_transition: "handle_summary_error"
+  
+  # 6. Log finale
+  log_completion:
+    state_type: command
+    action:
+      eval: |
+        print("🎉 Sequenza notifiche WeChat Work completata con successo!")
+        print(f"- Rapporto generale: {report_result.get('success', False)}")
+        print(f"- Alert manager: {manager_result.get('success', False)}")
+        print(f"- Notifica IT: {it_result.get('success', False)}")
+        print(f"- Riepilogo: {summary_result.get('success', False)}")
+        print(f"Completato alle: {report_time}")
+    transition: end
+  
+  # Gestori errori specifici
+  handle_report_error:
+    state_type: command
+    action:
+      eval: |
+        print("❌ Errore invio rapporto generale")
+        print(f"Errore: {report_result.get('error', 'Sconosciuto')}")
+    transition: "send_manager_alert"  # Continua comunque
+  
+  handle_manager_error:
+    state_type: command
+    action:
+      eval: |
+        print("⚠️ Errore invio alert manager")
+        print(f"Errore: {manager_result.get('error', 'Sconosciuto')}")
+    transition: "send_it_notification"  # Continua comunque
+  
+  handle_it_error:
+    state_type: command
+    action:
+      eval: |
+        print("⚠️ Errore invio notifica IT")
+        print(f"Errore: {it_result.get('error', 'Sconosciuto')}")
+    transition: "send_summary"  # Continua comunque
+  
+  handle_summary_error:
+    state_type: command
+    action:
+      eval: |
+        print("⚠️ Errore invio riepilogo")
+        print(f"Errore: {summary_result.get('error', 'Sconosciuto')}")
+    transition: "log_completion"
+  
+  # Stato finale
+  end:
+    state_type: end

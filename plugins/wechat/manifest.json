@@ -1,0 +1,157 @@
+{
+  "name": "wechat",
+  "version": "1.0.0",
+  "description": "Plugin per inviare messaggi tramite API WeChat Work. Supporta invio di messaggi di testo, immagini e file a utenti e gruppi WeChat Work.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "wechat_state.py",
+  "state_type": "wechat",
+  "plugin_type": "state",
+  "dependencies": {},
+  "requirements": [
+    "requests>=2.25.0",
+    "cryptography>=3.0.0"
+  ],
+  "api_version": "1.0",
+  "tags": ["wechat", "messaging", "china", "social", "notification", "enterprise", "work"],
+  "documentation": {
+    "parameters": {
+      "corp_id": {
+        "type": "string",
+        "required": true,
+        "description": "ID dell'azienda WeChat Work"
+      },
+      "corp_secret": {
+        "type": "string",
+        "required": true,
+        "description": "Secret dell'applicazione WeChat Work"
+      },
+      "agent_id": {
+        "type": "string",
+        "required": true,
+        "description": "ID dell'agente/applicazione WeChat Work"
+      },
+      "to_user": {
+        "type": "string",
+        "required": false,
+        "description": "ID utente destinatario (se non specificato, invia a tutti gli utenti dell'app)"
+      },
+      "to_party": {
+        "type": "string",
+        "required": false,
+        "description": "ID del dipartimento destinatario"
+      },
+      "to_tag": {
+        "type": "string",
+        "required": false,
+        "description": "ID del tag destinatario"
+      },
+      "message": {
+        "type": "string",
+        "required": true,
+        "description": "Testo del messaggio da inviare"
+      },
+      "message_type": {
+        "type": "string",
+        "required": false,
+        "default": "text",
+        "description": "Tipo di messaggio",
+        "enum": ["text", "textcard", "markdown"]
+      },
+      "safe": {
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "description": "Indica se il messaggio è confidenziale (0=no, 1=sì)"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare il risultato"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "Messaggio semplice",
+        "description": "Invia un messaggio di testo semplice a un utente specifico",
+        "config": {
+          "state_type": "wechat",
+          "corp_id": "{WECHAT_CORP_ID}",
+          "corp_secret": "{WECHAT_CORP_SECRET}",
+          "agent_id": "{WECHAT_AGENT_ID}",
+          "to_user": "{WECHAT_USER_ID}",
+          "message": "Ciao! Questo è un messaggio di test da IntellyHub.",
+          "transition": "next_step"
+        }
+      },
+      {
+        "name": "Messaggio a dipartimento",
+        "description": "Invia un messaggio a tutti gli utenti di un dipartimento",
+        "config": {
+          "state_type": "wechat",
+          "corp_id": "{WECHAT_CORP_ID}",
+          "corp_secret": "{WECHAT_CORP_SECRET}",
+          "agent_id": "{WECHAT_AGENT_ID}",
+          "to_party": "1",
+          "message": "Notifica importante per il dipartimento: {notification_text}",
+          "message_type": "text",
+          "output": "wechat_result",
+          "success_transition": "log_success",
+          "error_transition": "handle_error"
+        }
+      },
+      {
+        "name": "Messaggio markdown",
+        "description": "Invia un messaggio formattato in markdown",
+        "config": {
+          "state_type": "wechat",
+          "corp_id": "{WECHAT_CORP_ID}",
+          "corp_secret": "{WECHAT_CORP_SECRET}",
+          "agent_id": "{WECHAT_AGENT_ID}",
+          "to_user": "@all",
+          "message": "# Rapporto Automatico\n\n**Status**: {status}\n**Timestamp**: {timestamp}\n\n[Dettagli completi](https://example.com/report)",
+          "message_type": "markdown",
+          "transition": "end"
+        }
+      }
+    ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente",
+      "2. Configurare le credenziali WeChat Work:",
+      "   - WECHAT_CORP_ID: ID dell'azienda",
+      "   - WECHAT_CORP_SECRET: Secret dell'applicazione",
+      "   - WECHAT_AGENT_ID: ID dell'agente/app",
+      "3. Verificare i permessi dell'applicazione WeChat Work",
+      "4. Riavviare l'applicazione IntellyHub"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log",
+      "Testare l'invio di un messaggio di prova",
+      "Controllare che i destinatari ricevano i messaggi"
+    ],
+    "environment_variables": [
+      "WECHAT_CORP_ID - ID dell'azienda WeChat Work",
+      "WECHAT_CORP_SECRET - Secret dell'applicazione WeChat Work",
+      "WECHAT_AGENT_ID - ID dell'agente/applicazione WeChat Work"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
+  },
+  "homepage": "https://github.com/kuduk/intellyhub-plugins",
+  "repository": "https://github.com/kuduk/intellyhub-plugins.git",
+  "bugs": "https://github.com/kuduk/intellyhub-plugins/issues"
+}
