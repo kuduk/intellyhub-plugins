@@ -8,8 +8,6 @@ listener:
   message_types: ["text"]
   ignore_old_messages: true
 
-variables:
-  TELEGRAM_BOT_TOKEN: "{TELEGRAM_BOT_TOKEN}"
 
 start_state: "start"
 

@@ -11,8 +11,6 @@ listener:
   voice_download_path: "workspace"  # Cartella di destinazione
   transcribe_voice: true            # Abilita trascrizione
 
-variables:
-  TELEGRAM_BOT_TOKEN: "your_bot_token_here"
 
 start_state: "start"
 
