@@ -98,6 +98,9 @@ states:
 | `timeout` | integer | 30 | Timeout per richieste getUpdates |
 | `message_types` | array | ["text"] | Tipi di messaggio da processare |
 | `ignore_old_messages` | boolean | true | Ignora messaggi precedenti all'avvio |
+| `download_voice` | boolean | true | Scarica automaticamente i messaggi vocali |
+| `voice_download_path` | string | "workspace" | Cartella per salvare i file vocali |
+| `transcribe_voice` | boolean | true | Abilita trascrizione automatica vocali |
 
 ### Tipi di Messaggio Supportati
 - `text` - Messaggi di testo
@@ -114,6 +117,7 @@ states:
 
 Il listener inietta automaticamente queste variabili nel workflow:
 
+### Variabili Base (tutti i messaggi)
 | Variabile | Descrizione | Esempio |
 |-----------|-------------|---------|
 | `telegram_message_text` | Testo del messaggio | "Ciao bot!" |
@@ -128,9 +132,65 @@ Il listener inietta automaticamente queste variabili nel workflow:
 | `telegram_chat_type` | Tipo chat | "private" |
 | `telegram_chat_title` | Titolo chat/gruppo | "Gruppo Test" |
 
+### Variabili Vocali (solo per messaggi voice)
+| Variabile | Descrizione | Esempio |
+|-----------|-------------|---------|
+| `telegram_voice_file_path` | Percorso completo del file vocale | "workspace/voice_20240824_041500_123_456_abc12345.ogg" |
+| `telegram_voice_file_name` | Nome del file vocale | "voice_20240824_041500_123_456_abc12345.ogg" |
+| `telegram_voice_file_size` | Dimensione del file in bytes | "15420" |
+| `telegram_voice_duration` | Durata del vocale in secondi | "3" |
+| `telegram_voice_mime_type` | Tipo MIME del file | "audio/ogg" |
+| `telegram_voice_transcription` | Testo trascritto dal vocale | "Ciao, come stai?" |
+
 ## 📝 Esempi Pratici
 
-### 1. Bot Echo Semplice
+### 1. Bot per Messaggi Vocali
+```yaml
+# telegram_voice_bot.yaml
+listener:
+  listener_type: "telegram"
+  bot_token: "{TELEGRAM_BOT_TOKEN}"
+  message_types: ["text", "voice"]  # Accetta testi e vocali
+  download_voice: true              # Scarica vocali
+  transcribe_voice: true            # Trascrivi vocali
+
+variables:
+  TELEGRAM_BOT_TOKEN: "your_token_here"
+
+start_state: "start"
+
+states:
+  start:
+    state_type: "if"
+    condition: "'{telegram_message_type}' == 'voice'"
+    true_transition: "handle_voice"
+    false_transition: "handle_text"
+  
+  handle_voice:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      🎤 <b>Vocale ricevuto!</b>
+      
+      📁 File: <code>{telegram_voice_file_name}</code>
+      ⏱️ Durata: {telegram_voice_duration}s
+      🎯 Trascrizione: <i>"{telegram_voice_transcription}"</i>
+    parse_mode: "HTML"
+    transition: "end"
+  
+  handle_text:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: "💬 Testo: {telegram_message_text}"
+    transition: "end"
+  
+  end:
+    state_type: "end"
+```
+
+### 2. Bot Echo Semplice
 ```yaml
 # telegram_echo_bot.yaml
 listener:

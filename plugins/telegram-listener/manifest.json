@@ -13,7 +13,10 @@
   ],
   "optional_requirements": [
     "python-telegram-bot>=20.0",
-    "emoji>=2.0.0"
+    "emoji>=2.0.0",
+    "SpeechRecognition>=3.10.0",
+    "pydub>=0.25.0",
+    "openai-whisper>=20231117"
   ],
   "api_version": "1.0",
   "tags": ["telegram", "listener", "bot", "messaging", "automation", "polling"],

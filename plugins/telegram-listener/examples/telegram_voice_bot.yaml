@@ -1,0 +1,59 @@
+# Telegram Voice Bot - Esempio per Messaggi Vocali
+# Bot che gestisce messaggi vocali con download e trascrizione automatica
+
+listener:
+  listener_type: "telegram"
+  bot_token: "{TELEGRAM_BOT_TOKEN}"
+  polling_interval: 1
+  message_types: ["text", "voice"]  # Accetta sia testi che vocali
+  ignore_old_messages: true
+  download_voice: true              # Abilita download vocali
+  voice_download_path: "workspace"  # Cartella di destinazione
+  transcribe_voice: true            # Abilita trascrizione
+
+variables:
+  TELEGRAM_BOT_TOKEN: "your_bot_token_here"
+
+start_state: "start"
+
+states:
+  start:
+    state_type: "if"
+    condition: "'{telegram_message_type}' == 'voice'"
+    transition_true: "handle_voice"
+    transition_false: "handle_text"
+  
+  handle_voice:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      🎤 <b>Messaggio vocale ricevuto!</b>
+      
+      📁 <b>File:</b> <code>{telegram_voice_file_name}</code>
+      📏 <b>Dimensione:</b> {telegram_voice_file_size} bytes
+      ⏱️ <b>Durata:</b> {telegram_voice_duration} secondi
+      📂 <b>Percorso:</b> <code>{telegram_voice_file_path}</code>
+      
+      🎯 <b>Trascrizione:</b>
+      <i>"{telegram_voice_transcription}"</i>
+      
+      ✅ Vocale salvato e trascritto con successo!
+    parse_mode: "HTML"
+    transition: "end"
+  
+  handle_text:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      💬 <b>Messaggio di testo ricevuto:</b>
+      
+      <i>"{telegram_message_text}"</i>
+      
+      🎤 Prova a inviarmi un messaggio vocale per testare il download e la trascrizione!
+    parse_mode: "HTML"
+    transition: "end"
+  
+  end:
+    state_type: "end"

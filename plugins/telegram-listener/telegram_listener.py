@@ -7,6 +7,9 @@ import requests
 import time
 import logging
 import threading
+import os
+import uuid
+from datetime import datetime
 from typing import Dict, Any, List, Optional
 from yaml import safe_load
 from flow.flow import FlowDiagram
@@ -22,15 +25,21 @@ class TelegramListener(BaseListener):
     Supporta filtraggio per chat_id, tipi di messaggio e configurazioni avanzate.
     """
     
-    listener_type = "telegram-listener"
+    listener_type = "telegram"
     
     def __init__(self, event_config: Dict[str, Any], global_context: Optional[Dict[str, Any]] = None):
         super().__init__(event_config, global_context)
         
         # Configurazione del bot
-        self.bot_token = event_config.get("bot_token")
-        if not self.bot_token:
+        bot_token_raw = event_config.get("bot_token")
+        if not bot_token_raw:
             raise ValueError("bot_token è obbligatorio per il Telegram Listener")
+        
+        # Formatta il bot_token con le variabili globali se presenti
+        if global_context:
+            self.bot_token = self.format_recursive(bot_token_raw, global_context)
+        else:
+            self.bot_token = bot_token_raw
         
         # Configurazioni di filtraggio
         self.allowed_chat_ids = event_config.get("allowed_chat_ids", [])
@@ -40,6 +49,15 @@ class TelegramListener(BaseListener):
         self.polling_interval = event_config.get("polling_interval", 2)
         self.timeout = event_config.get("timeout", 30)
         self.ignore_old_messages = event_config.get("ignore_old_messages", True)
+        
+        # Configurazioni per messaggi vocali
+        self.download_voice = event_config.get("download_voice", True)
+        self.voice_download_path = event_config.get("voice_download_path", "workspace")
+        self.transcribe_voice = event_config.get("transcribe_voice", True)
+        
+        # Crea la cartella workspace se non esiste
+        if self.download_voice:
+            os.makedirs(self.voice_download_path, exist_ok=True)
         
         # Stato interno
         self._running = False
@@ -181,6 +199,150 @@ class TelegramListener(BaseListener):
         except Exception as e:
             logger.warning(f"⚠️ Impossibile ottenere l'ultimo update_id: {e}")
     
+    def _download_voice_file(self, voice_data: Dict[str, Any], chat_id: str, message_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Scarica un file vocale da Telegram e lo salva localmente
+        
+        Args:
+            voice_data: Dati del messaggio vocale da Telegram
+            chat_id: ID della chat
+            message_id: ID del messaggio
+            
+        Returns:
+            Dict con informazioni sul file scaricato o None se errore
+        """
+        try:
+            file_id = voice_data.get("file_id")
+            if not file_id:
+                logger.error("❌ File ID vocale mancante")
+                return None
+            
+            # Ottieni informazioni sul file
+            file_info_response = requests.get(
+                f"{self._api_base_url}/getFile",
+                params={"file_id": file_id},
+                timeout=10
+            )
+            file_info_response.raise_for_status()
+            
+            file_info = file_info_response.json()
+            if not file_info.get("ok"):
+                logger.error(f"❌ Errore ottenendo info file: {file_info.get('description')}")
+                return None
+            
+            file_path = file_info["result"].get("file_path")
+            file_size = file_info["result"].get("file_size", 0)
+            
+            if not file_path:
+                logger.error("❌ File path mancante")
+                return None
+            
+            # Genera nome file univoco
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            unique_id = str(uuid.uuid4())[:8]
+            file_extension = os.path.splitext(file_path)[1] or ".ogg"
+            filename = f"voice_{timestamp}_{chat_id}_{message_id}_{unique_id}{file_extension}"
+            local_path = os.path.join(self.voice_download_path, filename)
+            
+            # Scarica il file
+            download_url = f"https://api.telegram.org/file/bot{self.bot_token}/{file_path}"
+            logger.info(f"🎤 Scaricamento vocale: {filename}")
+            
+            download_response = requests.get(download_url, timeout=30)
+            download_response.raise_for_status()
+            
+            # Salva il file
+            with open(local_path, 'wb') as f:
+                f.write(download_response.content)
+            
+            # Informazioni sul file scaricato
+            file_info_result = {
+                "file_path": local_path,
+                "file_name": filename,
+                "file_size": file_size,
+                "duration": voice_data.get("duration", 0),
+                "mime_type": voice_data.get("mime_type", "audio/ogg"),
+                "download_success": True
+            }
+            
+            logger.info(f"✅ Vocale scaricato: {filename} ({file_size} bytes)")
+            return file_info_result
+            
+        except Exception as e:
+            logger.error(f"❌ Errore scaricamento vocale: {e}")
+            return {
+                "download_success": False,
+                "error": str(e)
+            }
+    
+    def _transcribe_voice_file(self, file_path: str) -> Optional[str]:
+        """
+        Trascrive un file vocale usando speech-to-text
+        
+        Args:
+            file_path: Percorso del file vocale
+            
+        Returns:
+            Testo trascritto o None se errore
+        """
+        try:
+            # Prova prima con speech_recognition se disponibile
+            try:
+                import speech_recognition as sr
+                
+                recognizer = sr.Recognizer()
+                
+                # Converti OGG in WAV se necessario
+                audio_file = file_path
+                if file_path.endswith('.ogg'):
+                    try:
+                        from pydub import AudioSegment
+                        audio = AudioSegment.from_ogg(file_path)
+                        wav_path = file_path.replace('.ogg', '.wav')
+                        audio.export(wav_path, format="wav")
+                        audio_file = wav_path
+                    except ImportError:
+                        logger.warning("⚠️ pydub non disponibile, provo con file OGG originale")
+                
+                # Trascrivi
+                with sr.AudioFile(audio_file) as source:
+                    audio_data = recognizer.record(source)
+                    text = recognizer.recognize_google(audio_data, language='it-IT')
+                    
+                logger.info(f"🎯 Trascrizione completata: '{text[:50]}...'")
+                return text
+                
+            except ImportError:
+                logger.warning("⚠️ speech_recognition non disponibile")
+            except sr.UnknownValueError:
+                logger.warning("⚠️ Impossibile riconoscere l'audio")
+                return "[Audio non riconoscibile]"
+            except sr.RequestError as e:
+                logger.warning(f"⚠️ Errore servizio riconoscimento: {e}")
+                return "[Errore trascrizione]"
+            
+            # Fallback: prova con whisper se disponibile
+            try:
+                import whisper
+                
+                model = whisper.load_model("base")
+                result = model.transcribe(file_path, language="it")
+                text = result["text"].strip()
+                
+                logger.info(f"🎯 Trascrizione Whisper completata: '{text[:50]}...'")
+                return text
+                
+            except ImportError:
+                logger.warning("⚠️ whisper non disponibile")
+            
+            # Se nessun metodo funziona
+            logger.warning("⚠️ Nessun sistema di trascrizione disponibile")
+            return "[Trascrizione non disponibile]"
+            
+        except Exception as e:
+            logger.error(f"❌ Errore trascrizione: {e}")
+            return f"[Errore trascrizione: {e}]"
+    
     def _process_update(self, update: Dict[str, Any], config_file: str):
         """Processa un singolo aggiornamento da Telegram"""
         try:
@@ -215,27 +377,8 @@ class TelegramListener(BaseListener):
         message_type = "text"
         message_text = message.get("text", "")
         
-        if message.get("photo"):
-            message_type = "photo"
-            message_text = message.get("caption", "")
-        elif message.get("document"):
-            message_type = "document"
-            message_text = message.get("caption", "")
-        elif message.get("audio"):
-            message_type = "audio"
-        elif message.get("video"):
-            message_type = "video"
-            message_text = message.get("caption", "")
-        elif message.get("voice"):
-            message_type = "voice"
-        elif message.get("sticker"):
-            message_type = "sticker"
-        elif message.get("location"):
-            message_type = "location"
-        elif message.get("contact"):
-            message_type = "contact"
-        
-        return {
+        # Variabili base del messaggio
+        base_data = {
             "telegram_message_text": message_text,
             "telegram_chat_id": str(chat.get("id", "")),
             "telegram_user_id": str(user.get("id", "")),
@@ -248,6 +391,81 @@ class TelegramListener(BaseListener):
             "telegram_chat_type": chat.get("type", ""),
             "telegram_chat_title": chat.get("title", "")
         }
+        
+        if message.get("photo"):
+            message_type = "photo"
+            message_text = message.get("caption", "")
+            base_data["telegram_message_text"] = message_text
+            base_data["telegram_message_type"] = message_type
+        elif message.get("document"):
+            message_type = "document"
+            message_text = message.get("caption", "")
+            base_data["telegram_message_text"] = message_text
+            base_data["telegram_message_type"] = message_type
+        elif message.get("audio"):
+            message_type = "audio"
+            base_data["telegram_message_type"] = message_type
+        elif message.get("video"):
+            message_type = "video"
+            message_text = message.get("caption", "")
+            base_data["telegram_message_text"] = message_text
+            base_data["telegram_message_type"] = message_type
+        elif message.get("voice"):
+            message_type = "voice"
+            base_data["telegram_message_type"] = message_type
+            
+            # Gestione speciale per i messaggi vocali
+            if self.download_voice:
+                voice_data = message.get("voice", {})
+                chat_id = base_data["telegram_chat_id"]
+                message_id = base_data["telegram_message_id"]
+                
+                # Scarica il file vocale
+                voice_file_info = self._download_voice_file(voice_data, chat_id, message_id)
+                
+                if voice_file_info and voice_file_info.get("download_success"):
+                    # Aggiungi informazioni sul file vocale
+                    base_data.update({
+                        "telegram_voice_file_path": voice_file_info["file_path"],
+                        "telegram_voice_file_name": voice_file_info["file_name"],
+                        "telegram_voice_file_size": str(voice_file_info["file_size"]),
+                        "telegram_voice_duration": str(voice_file_info["duration"]),
+                        "telegram_voice_mime_type": voice_file_info["mime_type"]
+                    })
+                    
+                    # Trascrizione del vocale se abilitata
+                    if self.transcribe_voice:
+                        logger.info("🎯 Avvio trascrizione vocale...")
+                        transcription = self._transcribe_voice_file(voice_file_info["file_path"])
+                        if transcription:
+                            base_data["telegram_voice_transcription"] = transcription
+                            base_data["telegram_message_text"] = transcription  # Usa la trascrizione come testo
+                            logger.info(f"✅ Trascrizione: '{transcription[:50]}...'")
+                        else:
+                            base_data["telegram_voice_transcription"] = "[Trascrizione fallita]"
+                    
+                else:
+                    # Errore nel download
+                    base_data.update({
+                        "telegram_voice_file_path": "",
+                        "telegram_voice_file_name": "",
+                        "telegram_voice_file_size": "0",
+                        "telegram_voice_duration": str(voice_data.get("duration", 0)),
+                        "telegram_voice_mime_type": voice_data.get("mime_type", "audio/ogg"),
+                        "telegram_voice_transcription": "[Download fallito]"
+                    })
+            
+        elif message.get("sticker"):
+            message_type = "sticker"
+            base_data["telegram_message_type"] = message_type
+        elif message.get("location"):
+            message_type = "location"
+            base_data["telegram_message_type"] = message_type
+        elif message.get("contact"):
+            message_type = "contact"
+            base_data["telegram_message_type"] = message_type
+        
+        return base_data
     
     def _should_process_message(self, message_data: Dict[str, Any]) -> bool:
         """Determina se il messaggio deve essere processato in base ai filtri"""
@@ -272,8 +490,12 @@ class TelegramListener(BaseListener):
             with open(config_file, 'r', encoding='utf-8') as file:
                 config = safe_load(file)
             
+            # Per i listener, il start_state è sempre il primo stato definito
+            # o "start" se non specificato diversamente
+            start_state = config.get("start_state", "start")
+            
             # Crea e avvia il workflow
-            flow = FlowDiagram(config, self.global_context)
+            flow = FlowDiagram(config, self.global_context, start_state=start_state)
             
             # Inietta le variabili del messaggio
             flow.variables.update(message_data)

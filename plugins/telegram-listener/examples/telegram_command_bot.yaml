@@ -2,7 +2,7 @@
 # Bot che gestisce comandi specifici e messaggi normali
 
 listener:
-  type: "telegram"
+  listener_type: "telegram"
   bot_token: "{TELEGRAM_BOT_TOKEN}"
   polling_interval: 1
   message_types: ["text"]
@@ -10,6 +10,8 @@ listener:
 
 variables:
   TELEGRAM_BOT_TOKEN: "your_bot_token_here"
+
+start_state: "start"
 
 states:
   start:
