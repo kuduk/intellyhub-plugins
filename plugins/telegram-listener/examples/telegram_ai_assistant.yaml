@@ -1,0 +1,192 @@
+# Telegram AI Assistant - Esempio con Integrazione LLM
+# Bot che integra intelligenza artificiale per rispondere alle domande
+
+listener:
+  type: "telegram"
+  bot_token: "{TELEGRAM_BOT_TOKEN}"
+  allowed_chat_ids: [123456789]  # Sostituisci con il tuo chat_id
+  polling_interval: 1
+  message_types: ["text"]
+  ignore_old_messages: true
+
+variables:
+  TELEGRAM_BOT_TOKEN: "your_bot_token_here"
+  OPENAI_API_KEY: "your_openai_api_key_here"
+  # Oppure usa altri provider LLM supportati
+
+states:
+  start:
+    state_type: "if"
+    condition: "'{telegram_message_text}'.startswith('/ai ')"
+    true_transition: "process_ai_request"
+    false_transition: "check_other_commands"
+  
+  check_other_commands:
+    state_type: "switch"
+    value: "{telegram_message_text}"
+    cases:
+      "/start": "cmd_start"
+      "/help": "cmd_help"
+      "/status": "cmd_status"
+    default: "normal_response"
+  
+  cmd_start:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      🤖 <b>AI Assistant Bot</b>
+      
+      Ciao {telegram_user_first_name}! Sono un assistente AI.
+      
+      <b>Come usarmi:</b>
+      • /ai [domanda] - Fai una domanda all'AI
+      • /help - Mostra i comandi
+      • /status - Stato del sistema
+      
+      <b>Esempio:</b>
+      <code>/ai Spiegami la fotosintesi</code>
+    parse_mode: "HTML"
+    transition: "end"
+  
+  cmd_help:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      📚 <b>Comandi disponibili:</b>
+      
+      🤖 <b>/ai [domanda]</b> - Chiedi qualcosa all'intelligenza artificiale
+      ℹ️ <b>/help</b> - Mostra questo messaggio
+      📊 <b>/status</b> - Stato del sistema
+      🚀 <b>/start</b> - Messaggio di benvenuto
+      
+      <b>Esempi di domande AI:</b>
+      • <code>/ai Come funziona il machine learning?</code>
+      • <code>/ai Scrivi una poesia sull'estate</code>
+      • <code>/ai Riassumi la storia di Roma</code>
+      • <code>/ai Aiutami con questo codice Python</code>
+    parse_mode: "HTML"
+    transition: "end"
+  
+  cmd_status:
+    state_type: "command"
+    action:
+      eval: "import datetime; f'Sistema attivo dal {datetime.datetime.now().strftime(\"%d/%m/%Y %H:%M:%S\")}'"
+    output: "system_status"
+    transition: "send_status"
+  
+  send_status:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      📊 <b>Stato del Sistema:</b>
+      
+      ✅ Bot attivo e funzionante
+      🤖 AI Engine: OpenAI GPT
+      ⏰ {system_status}
+      👤 Utente autorizzato: {telegram_user_first_name}
+    parse_mode: "HTML"
+    transition: "end"
+  
+  process_ai_request:
+    state_type: "command"
+    action:
+      eval: "'{telegram_message_text}'[4:].strip()"  # Rimuovi '/ai ' e spazi
+    output: "ai_prompt"
+    transition: "validate_prompt"
+  
+  validate_prompt:
+    state_type: "if"
+    condition: "len('{ai_prompt}') > 0"
+    true_transition: "send_thinking"
+    false_transition: "empty_prompt"
+  
+  empty_prompt:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      ❓ <b>Domanda vuota!</b>
+      
+      Usa: <code>/ai [la tua domanda]</code>
+      
+      Esempio: <code>/ai Spiegami l'intelligenza artificiale</code>
+    parse_mode: "HTML"
+    transition: "end"
+  
+  send_thinking:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: "🤔 Sto pensando alla tua domanda..."
+    transition: "call_ai"
+  
+  call_ai:
+    state_type: "llm_agent"
+    provider: "openai"
+    api_key: "{OPENAI_API_KEY}"
+    model: "gpt-3.5-turbo"
+    prompt: |
+      Sei un assistente AI utile e amichevole che risponde in italiano.
+      Fornisci risposte chiare, accurate e ben strutturate.
+      
+      Domanda dell'utente: {ai_prompt}
+    max_tokens: 1000
+    temperature: 0.7
+    output: "ai_response"
+    success_transition: "send_ai_response"
+    error_transition: "ai_error"
+  
+  send_ai_response:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      🤖 <b>Risposta AI:</b>
+      
+      {ai_response}
+      
+      <i>💡 Fai un'altra domanda con /ai [domanda]</i>
+    parse_mode: "HTML"
+    transition: "end"
+  
+  ai_error:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      ❌ <b>Errore AI</b>
+      
+      Mi dispiace, c'è stato un problema nell'elaborazione della tua richiesta.
+      
+      Possibili cause:
+      • Servizio AI temporaneamente non disponibile
+      • Limite di utilizzo raggiunto
+      • Problema di connessione
+      
+      Riprova tra qualche minuto.
+    parse_mode: "HTML"
+    transition: "end"
+  
+  normal_response:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      👋 Ciao {telegram_user_first_name}!
+      
+      Per usare l'AI, scrivi: <code>/ai [la tua domanda]</code>
+      
+      <b>Esempi:</b>
+      • <code>/ai Spiegami la fisica quantistica</code>
+      • <code>/ai Scrivi una ricetta per la pizza</code>
+      • <code>/ai Come imparare Python?</code>
+      
+      Usa /help per vedere tutti i comandi disponibili.
+    parse_mode: "HTML"
+    transition: "end"
+  
+  end:
+    state_type: "end"

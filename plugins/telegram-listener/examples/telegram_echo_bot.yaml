@@ -1,0 +1,23 @@
+# Telegram Echo Bot - Esempio Base
+# Ripete semplicemente tutti i messaggi ricevuti
+
+listener:
+  listener_type: "telegram"
+  bot_token: "{TELEGRAM_BOT_TOKEN}"
+  polling_interval: 2
+  message_types: ["text"]
+  ignore_old_messages: true
+
+variables:
+  TELEGRAM_BOT_TOKEN: "your_bot_token_here"
+
+states:
+  start:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: "🔄 Echo: {telegram_message_text}"
+    transition: "end"
+  
+  end:
+    state_type: "end"

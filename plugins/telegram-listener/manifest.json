@@ -1,0 +1,151 @@
+{
+  "name": "telegram-listener",
+  "version": "1.0.0",
+  "description": "Plugin listener per ricevere messaggi da bot Telegram. Utilizza long polling per ascoltare messaggi in arrivo e triggerare workflow automaticamente.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "telegram_listener.py",
+  "plugin_type": "listener",
+  "listener_type": "telegram",
+  "dependencies": {},
+  "requirements": [
+    "requests>=2.25.0"
+  ],
+  "optional_requirements": [
+    "python-telegram-bot>=20.0",
+    "emoji>=2.0.0"
+  ],
+  "api_version": "1.0",
+  "tags": ["telegram", "listener", "bot", "messaging", "automation", "polling"],
+  "documentation": {
+    "parameters": {
+      "bot_token": {
+        "type": "string",
+        "required": true,
+        "description": "Token del bot Telegram per l'autenticazione con l'API"
+      },
+      "allowed_chat_ids": {
+        "type": "array",
+        "required": false,
+        "description": "Lista di chat_id autorizzati a triggerare il workflow (se vuoto, accetta tutti)"
+      },
+      "polling_interval": {
+        "type": "integer",
+        "required": false,
+        "default": 2,
+        "description": "Intervallo in secondi tra le richieste di polling"
+      },
+      "timeout": {
+        "type": "integer",
+        "required": false,
+        "default": 30,
+        "description": "Timeout in secondi per le richieste getUpdates"
+      },
+      "message_types": {
+        "type": "array",
+        "required": false,
+        "default": ["text"],
+        "description": "Tipi di messaggio da processare",
+        "options": ["text", "photo", "document", "audio", "video", "voice", "sticker", "location", "contact"]
+      },
+      "ignore_old_messages": {
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Ignora i messaggi precedenti all'avvio del listener"
+      }
+    },
+    "variables_injected": {
+      "telegram_message_text": "Testo del messaggio ricevuto",
+      "telegram_chat_id": "ID della chat da cui proviene il messaggio",
+      "telegram_user_id": "ID dell'utente che ha inviato il messaggio",
+      "telegram_message_id": "ID univoco del messaggio",
+      "telegram_user_first_name": "Nome dell'utente mittente",
+      "telegram_user_last_name": "Cognome dell'utente mittente (se disponibile)",
+      "telegram_user_username": "Username dell'utente mittente (se disponibile)",
+      "telegram_message_type": "Tipo di messaggio (text, photo, document, etc.)",
+      "telegram_message_date": "Timestamp del messaggio (Unix timestamp)",
+      "telegram_chat_type": "Tipo di chat (private, group, supergroup, channel)",
+      "telegram_chat_title": "Titolo della chat (per gruppi e canali)"
+    },
+    "examples": [
+      {
+        "name": "Listener base",
+        "description": "Configurazione minima per ascoltare messaggi Telegram",
+        "config": {
+          "listener": {
+            "type": "telegram",
+            "bot_token": "{TELEGRAM_BOT_TOKEN}"
+          }
+        }
+      },
+      {
+        "name": "Listener con filtri",
+        "description": "Listener che accetta solo messaggi da chat specifiche",
+        "config": {
+          "listener": {
+            "type": "telegram",
+            "bot_token": "{TELEGRAM_BOT_TOKEN}",
+            "allowed_chat_ids": [123456789, 987654321],
+            "polling_interval": 1,
+            "message_types": ["text", "photo"]
+          }
+        }
+      },
+      {
+        "name": "Listener per bot di gruppo",
+        "description": "Configurazione ottimizzata per bot che operano in gruppi",
+        "config": {
+          "listener": {
+            "type": "telegram",
+            "bot_token": "{TELEGRAM_BOT_TOKEN}",
+            "polling_interval": 3,
+            "timeout": 60,
+            "message_types": ["text"],
+            "ignore_old_messages": true
+          }
+        }
+      }
+    ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/listeners/",
+      "2. La dipendenza requests verrà installata automaticamente",
+      "3. Creare un bot Telegram tramite @BotFather su Telegram:",
+      "   - Invia /newbot a @BotFather",
+      "   - Scegli un nome e username per il bot",
+      "   - Copia il token fornito da BotFather",
+      "4. Configurare il listener nel file YAML del workflow",
+      "5. Avviare il workflow - il listener inizierà automaticamente il polling",
+      "6. Inviare messaggi al bot per triggerare il workflow"
+    ],
+    "post_install": [
+      "Verificare che il listener sia caricato nei log di avvio:",
+      "✅ Listener 'telegram' registrato dalla classe TelegramListener",
+      "Testare inviando un messaggio al bot configurato"
+    ],
+    "environment_variables": [
+      "TELEGRAM_BOT_TOKEN - token del bot Telegram (obbligatorio)"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
+  },
+  "integration": {
+    "works_with": [
+      "telegram-bot - per inviare risposte automatiche",
+      "llm-agent - per creare assistenti AI",
+      "rss-reader - per notifiche automatiche",
+      "text-to-speech - per messaggi vocali"
+    ],
+    "use_cases": [
+      "Bot di assistenza clienti automatizzato",
+      "Sistema di notifiche bidirezionale",
+      "Chatbot con intelligenza artificiale",
+      "Bot per automazione di gruppo/canale",
+      "Sistema di monitoraggio e alerting"
+    ]
+  }
+}

@@ -1,0 +1,140 @@
+# Telegram Command Bot - Esempio Avanzato
+# Bot che gestisce comandi specifici e messaggi normali
+
+listener:
+  type: "telegram"
+  bot_token: "{TELEGRAM_BOT_TOKEN}"
+  polling_interval: 1
+  message_types: ["text"]
+  ignore_old_messages: true
+
+variables:
+  TELEGRAM_BOT_TOKEN: "your_bot_token_here"
+
+states:
+  start:
+    state_type: "if"
+    condition: "'{telegram_message_text}'.startswith('/')"
+    true_transition: "handle_command"
+    false_transition: "handle_message"
+  
+  handle_command:
+    state_type: "switch"
+    value: "{telegram_message_text}"
+    cases:
+      "/start": "cmd_start"
+      "/help": "cmd_help"
+      "/time": "cmd_time"
+      "/info": "cmd_info"
+      "/ping": "cmd_ping"
+    default: "cmd_unknown"
+  
+  cmd_start:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      🚀 <b>Bot avviato!</b>
+      
+      Benvenuto {telegram_user_first_name}!
+      Usa /help per vedere i comandi disponibili.
+      
+      Il tuo ID utente è: <code>{telegram_user_id}</code>
+      Chat ID: <code>{telegram_chat_id}</code>
+    parse_mode: "HTML"
+    transition: "end"
+  
+  cmd_help:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      📚 <b>Comandi disponibili:</b>
+      
+      /start - Avvia il bot e mostra informazioni
+      /help - Mostra questo messaggio di aiuto
+      /time - Mostra l'ora corrente
+      /info - Informazioni sul messaggio ricevuto
+      /ping - Test di connessione
+      
+      💬 <i>Puoi anche inviarmi messaggi normali e li ripeterò!</i>
+    parse_mode: "HTML"
+    transition: "end"
+  
+  cmd_time:
+    state_type: "command"
+    action:
+      eval: "import datetime; datetime.datetime.now().strftime('%H:%M:%S del %d/%m/%Y')"
+    output: "current_time"
+    transition: "send_time"
+  
+  send_time:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: "🕐 <b>Ora corrente:</b> {current_time}"
+    parse_mode: "HTML"
+    transition: "end"
+  
+  cmd_info:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      ℹ️ <b>Informazioni messaggio:</b>
+      
+      👤 <b>Utente:</b> {telegram_user_first_name} {telegram_user_last_name}
+      🆔 <b>User ID:</b> <code>{telegram_user_id}</code>
+      📱 <b>Username:</b> @{telegram_user_username}
+      💬 <b>Chat ID:</b> <code>{telegram_chat_id}</code>
+      🏷️ <b>Tipo chat:</b> {telegram_chat_type}
+      📅 <b>Data messaggio:</b> {telegram_message_date}
+      🔢 <b>Message ID:</b> {telegram_message_id}
+    parse_mode: "HTML"
+    transition: "end"
+  
+  cmd_ping:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: "🏓 Pong! Bot attivo e funzionante."
+    transition: "end"
+  
+  cmd_unknown:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      ❓ <b>Comando non riconosciuto:</b> <code>{telegram_message_text}</code>
+      
+      Usa /help per vedere i comandi disponibili.
+    parse_mode: "HTML"
+    transition: "end"
+  
+  handle_message:
+    state_type: "if"
+    condition: "len('{telegram_message_text}') > 0"
+    true_transition: "echo_message"
+    false_transition: "empty_message"
+  
+  echo_message:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: |
+      💬 <b>Hai scritto:</b>
+      <i>"{telegram_message_text}"</i>
+      
+      📏 Lunghezza: {telegram_message_text|length} caratteri
+    parse_mode: "HTML"
+    transition: "end"
+  
+  empty_message:
+    state_type: "telegram-bot"
+    bot_token: "{TELEGRAM_BOT_TOKEN}"
+    chat_id: "{telegram_chat_id}"
+    message: "🤔 Hai inviato un messaggio vuoto. Prova a scrivere qualcosa!"
+    transition: "end"
+  
+  end:
+    state_type: "end"
