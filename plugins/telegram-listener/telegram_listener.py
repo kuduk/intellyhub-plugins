@@ -50,14 +50,18 @@ class TelegramListener(BaseListener):
         self.timeout = event_config.get("timeout", 30)
         self.ignore_old_messages = event_config.get("ignore_old_messages", True)
         
-        # Configurazioni per messaggi vocali
-        self.download_voice = event_config.get("download_voice", True)
+        # Configurazioni per messaggi vocali (opzionali)
+        self.download_voice = event_config.get("download_voice", False)  # Default: disabilitato
         self.voice_download_path = event_config.get("voice_download_path", "workspace")
-        self.transcribe_voice = event_config.get("transcribe_voice", True)
+        self.transcribe_voice = event_config.get("transcribe_voice", False)  # Default: disabilitato
         
-        # Crea la cartella workspace se non esiste
+        # Crea la cartella workspace solo se download è abilitato
         if self.download_voice:
             os.makedirs(self.voice_download_path, exist_ok=True)
+            logger.info(f"📁 Download vocali abilitato in: {self.voice_download_path}")
+        
+        if self.transcribe_voice:
+            logger.info("🎯 Trascrizione vocali abilitata")
         
         # Stato interno
         self._running = False

@@ -56,6 +56,24 @@
         "required": false,
         "default": true,
         "description": "Ignora i messaggi precedenti all'avvio del listener"
+      },
+      "download_voice": {
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Abilita il download automatico dei messaggi vocali"
+      },
+      "voice_download_path": {
+        "type": "string",
+        "required": false,
+        "default": "workspace",
+        "description": "Cartella dove salvare i file vocali scaricati"
+      },
+      "transcribe_voice": {
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "description": "Abilita la trascrizione automatica dei messaggi vocali"
       }
     },
     "variables_injected": {

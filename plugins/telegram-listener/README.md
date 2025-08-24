@@ -98,9 +98,9 @@ states:
 | `timeout` | integer | 30 | Timeout per richieste getUpdates |
 | `message_types` | array | ["text"] | Tipi di messaggio da processare |
 | `ignore_old_messages` | boolean | true | Ignora messaggi precedenti all'avvio |
-| `download_voice` | boolean | true | Scarica automaticamente i messaggi vocali |
+| `download_voice` | boolean | false | **Opzionale**. Scarica automaticamente i messaggi vocali |
 | `voice_download_path` | string | "workspace" | Cartella per salvare i file vocali |
-| `transcribe_voice` | boolean | true | Abilita trascrizione automatica vocali |
+| `transcribe_voice` | boolean | false | **Opzionale**. Abilita trascrizione automatica vocali |
 
 ### Tipi di Messaggio Supportati
 - `text` - Messaggi di testo
