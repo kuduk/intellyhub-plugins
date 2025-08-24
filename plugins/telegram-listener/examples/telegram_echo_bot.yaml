@@ -9,7 +9,7 @@ listener:
   ignore_old_messages: true
 
 variables:
-  TELEGRAM_BOT_TOKEN: "7899876312:AAEF4W6t-x8mA6IkT8LJgHhf8X-6JYup-qY"
+  TELEGRAM_BOT_TOKEN: "{TELEGRAM_BOT_TOKEN}"
 
 start_state: "start"
 
