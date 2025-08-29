@@ -1,0 +1,39 @@
+{
+  "name": "email-listener",
+  "version": "1.0.0",
+  "description": "Plugin listener per ricevere messaggi email tramite IMAP. Monitora caselle email e triggera workflow automaticamente all'arrivo di nuovi messaggi.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "email_listener.py",
+  "plugin_type": "listener",
+  "listener_type": "email",
+  "dependencies": {},
+  "requirements": [],
+  "api_version": "1.0",
+  "tags": ["email", "listener", "imap", "messaging", "automation"],
+  "documentation": {
+    "parameters": {
+      "server": {
+        "type": "string",
+        "required": true,
+        "description": "Server IMAP per la connessione email"
+      },
+      "port": {
+        "type": "integer",
+        "required": false,
+        "default": 993,
+        "description": "Porta del server IMAP (default 993 per SSL)"
+      },
+      "username": {
+        "type": "string", 
+        "required": true,
+        "description": "Username per l'autenticazione email"
+      },
+      "password": {
+        "type": "string",
+        "required": true,
+        "description": "Password per l'autenticazione email"
+      }
+    }
+  }
+}

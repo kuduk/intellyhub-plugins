@@ -1,0 +1,48 @@
+{
+  "name": "directory-listener",
+  "version": "1.0.0",
+  "description": "Plugin listener per monitorare directory del filesystem. Triggera workflow quando vengono create, modificate o eliminate file in directory specifiche.",
+  "author": "IntellyHub Team",
+  "license": "MIT", 
+  "entry_file": "directory_listener.py",
+  "plugin_type": "listener",
+  "listener_type": "directory",
+  "dependencies": {},
+  "requirements": ["watchdog>=2.1.0"],
+  "api_version": "1.0",
+  "tags": ["directory", "listener", "filesystem", "file", "automation"], 
+  "documentation": {
+    "parameters": {
+      "path": {
+        "type": "string",
+        "required": true,
+        "description": "Percorso della directory da monitorare"
+      },
+      "recursive": {
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Monitora anche sottodirectory ricorsivamente"
+      },
+      "file_patterns": {
+        "type": "array",
+        "required": false,
+        "description": "Pattern di file da monitorare (es. [\"*.txt\", \"*.json\"])"
+      },
+      "events": {
+        "type": "array", 
+        "required": false,
+        "default": ["created", "modified"],
+        "description": "Tipi di eventi da ascoltare",
+        "options": ["created", "modified", "deleted", "moved"]
+      }
+    },
+    "variables_injected": {
+      "file_path": "Percorso completo del file che ha triggerato l'evento",
+      "file_name": "Nome del file senza percorso",
+      "event_type": "Tipo di evento (created, modified, deleted, moved)", 
+      "directory": "Directory contenente il file",
+      "file_size": "Dimensione del file in bytes"
+    }
+  }
+}

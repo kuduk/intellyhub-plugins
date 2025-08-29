@@ -1,0 +1,34 @@
+{
+  "name": "mcp-listener",
+  "version": "1.0.0",
+  "description": "Plugin listener per Model Context Protocol. Riceve messaggi e comandi da client MCP e triggera workflow automaticamente.",
+  "author": "IntellyHub Team", 
+  "license": "MIT",
+  "entry_file": "mcp_listener.py",
+  "plugin_type": "listener",
+  "listener_type": "mcp",
+  "dependencies": {},
+  "requirements": [],
+  "api_version": "1.0", 
+  "tags": ["mcp", "listener", "protocol", "messaging", "automation"],
+  "documentation": {
+    "parameters": {
+      "endpoint": {
+        "type": "string",
+        "required": true,
+        "description": "Endpoint MCP su cui ascoltare"
+      },
+      "auth_token": {
+        "type": "string",
+        "required": false,
+        "description": "Token di autenticazione per connessioni MCP"
+      }
+    },
+    "variables_injected": {
+      "mcp_message": "Messaggio ricevuto via MCP",
+      "mcp_client_id": "ID del client che ha inviato il messaggio",
+      "mcp_command": "Comando MCP ricevuto",
+      "mcp_context": "Contesto del messaggio MCP"
+    }
+  }
+}

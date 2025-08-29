@@ -1,0 +1,34 @@
+{
+  "name": "a2a-listener",
+  "version": "1.0.0", 
+  "description": "Plugin listener per comunicazione automation-to-automation. Permette a workflow di triggerare altri workflow in cascata.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "a2a_listener.py", 
+  "plugin_type": "listener",
+  "listener_type": "a2a",
+  "dependencies": {},
+  "requirements": [],
+  "api_version": "1.0",
+  "tags": ["a2a", "listener", "automation", "workflow", "cascade"],
+  "documentation": {
+    "parameters": {
+      "channel": {
+        "type": "string",
+        "required": true,
+        "description": "Canale A2A su cui ascoltare messaggi"
+      },
+      "filter": {
+        "type": "string",
+        "required": false,
+        "description": "Filtro per tipologia di messaggi da processare"
+      }
+    },
+    "variables_injected": {
+      "a2a_message": "Messaggio ricevuto dal canale A2A",
+      "a2a_channel": "Canale da cui proviene il messaggio",
+      "a2a_timestamp": "Timestamp del messaggio",
+      "a2a_source": "Source workflow che ha inviato il messaggio"
+    }
+  }
+}

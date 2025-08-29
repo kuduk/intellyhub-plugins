@@ -1,0 +1,56 @@
+{
+  "name": "mqtt-listener", 
+  "version": "1.0.0",
+  "description": "Plugin listener per ricevere messaggi MQTT. Si connette a broker MQTT e triggera workflow quando riceve messaggi su topic specifici.",
+  "author": "IntellyHub Team",
+  "license": "MIT", 
+  "entry_file": "mqtt_listener.py",
+  "plugin_type": "listener",
+  "listener_type": "mqtt",
+  "dependencies": {},
+  "requirements": ["paho-mqtt>=1.6.0"],
+  "api_version": "1.0",
+  "tags": ["mqtt", "listener", "iot", "messaging", "automation"],
+  "documentation": {
+    "parameters": {
+      "host": {
+        "type": "string",
+        "required": true,
+        "description": "Host del broker MQTT"
+      },
+      "port": {
+        "type": "integer",
+        "required": false,
+        "default": 1883,
+        "description": "Porta del broker MQTT"
+      },
+      "topic": {
+        "type": "string",
+        "required": true,
+        "description": "Topic MQTT da ascoltare"
+      },
+      "username": {
+        "type": "string",
+        "required": false,
+        "description": "Username per autenticazione MQTT"
+      },
+      "password": {
+        "type": "string",
+        "required": false,
+        "description": "Password per autenticazione MQTT"
+      },
+      "qos": {
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "description": "Quality of Service level (0, 1, or 2)"
+      }
+    },
+    "variables_injected": {
+      "mqtt_topic": "Topic del messaggio ricevuto",
+      "mqtt_payload": "Payload del messaggio MQTT",
+      "mqtt_qos": "Quality of Service del messaggio",
+      "mqtt_retain": "Flag retain del messaggio"
+    }
+  }
+}

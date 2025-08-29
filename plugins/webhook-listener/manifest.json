@@ -1,0 +1,45 @@
+{
+  "name": "webhook-listener",
+  "version": "1.0.0",
+  "description": "Plugin listener per ricevere webhook HTTP. Espone endpoint HTTP e triggera workflow quando riceve richieste POST.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "webhook_listener.py",
+  "plugin_type": "listener",
+  "listener_type": "webhook",
+  "dependencies": {},
+  "requirements": [],
+  "api_version": "1.0",
+  "tags": ["webhook", "listener", "http", "api", "automation"],
+  "documentation": {
+    "parameters": {
+      "path": {
+        "type": "string",
+        "required": true,
+        "description": "Percorso dell'endpoint webhook (es. /webhooks/my-hook)"
+      },
+      "port": {
+        "type": "integer",
+        "required": false,
+        "default": 8080,
+        "description": "Porta su cui esporre il webhook server"
+      },
+      "allowed_ips": {
+        "type": "array",
+        "required": false,
+        "description": "Lista di IP autorizzati a chiamare il webhook"
+      },
+      "secret": {
+        "type": "string",
+        "required": false,
+        "description": "Secret per validazione firma webhook"
+      }
+    },
+    "variables_injected": {
+      "webhook_data": "Dati ricevuti nel body della richiesta",
+      "webhook_headers": "Headers della richiesta HTTP",
+      "webhook_method": "Metodo HTTP della richiesta",
+      "webhook_ip": "Indirizzo IP del mittente"
+    }
+  }
+}
