@@ -1,0 +1,358 @@
+# Esempio: Complete Workflow
+# Workflow completo che dimostra tutte le funzionalità del plugin
+
+variables:
+  # Configura qui le tue credenziali ElevenLabs
+  ELEVENLABS_API_KEY: "your_elevenlabs_api_key_here"
+  AGENT_ID: "your-agent-id"
+  AGENT_PHONE_NUMBER_ID: "your-phone-number-id"
+  
+  # Lista clienti per la campagna con oggetti annidati complessi (formato array nativo)
+  CUSTOMER_LIST:
+    - phone_number: "+1234567890"
+      contact_info:
+        name: "Cliente A"
+        company: "Azienda Alpha"
+        title: "Direttore Vendite"
+        department: "Sales"
+      preferences:
+        language: "it"
+        timezone: "Europe/Rome"
+        best_call_times:
+          - "09:00-12:00"
+          - "15:00-18:00"
+        blackout_dates:
+          - "2025-08-15"
+          - "2025-12-25"
+      metadata:
+        priority: "urgent"
+        customer_type: "vip"
+        tags:
+          - "enterprise"
+          - "decision-maker"
+          - "high-value"
+        custom_fields:
+          account_value: "1000000"
+          contract_end: "2025-12-31"
+          preferred_contact: "morning"
+    - phone_number: "+0987654321"
+      contact_info:
+        name: "Customer B"
+        company: "Beta Business Corp"
+        title: "Product Manager"
+        department: "Product"
+      preferences:
+        language: "en"
+        timezone: "America/New_York"
+        best_call_times:
+          - "10:00-16:00"
+      metadata:
+        priority: "high"
+        customer_type: "customer"
+        tags:
+          - "premium"
+          - "product-focused"
+        custom_fields:
+          account_value: "500000"
+          industry: "Technology"
+    - phone_number: "+1111111111"
+      contact_info:
+        name: "Client C"
+        company: "Gamma Global"
+        title: "CEO"
+      preferences:
+        language: "fr"
+        timezone: "Europe/Paris"
+        best_call_times:
+          - "08:00-11:00"
+          - "14:00-16:00"
+        blackout_dates:
+          - "2025-07-14"
+          - "2025-08-01"
+      metadata:
+        priority: "urgent"
+        customer_type: "partner"
+        tags:
+          - "executive"
+          - "strategic-partner"
+        custom_fields:
+          partnership_level: "Platinum"
+          last_meeting: "2025-01-10"
+  
+  # Configurazione workflow
+  monitoring_enabled: true
+  max_monitor_iterations: 15
+  current_iteration: 0
+  workflow_start_time: ""
+
+states:
+  initialize:
+    state_type: "command"
+    action:
+      eval: |
+        import datetime
+        workflow_start_time = datetime.datetime.now().isoformat()
+        print(f"🚀 INIZIO WORKFLOW COMPLETO BATCH CALLING")
+        print(f"   📅 Avviato il: {workflow_start_time}")
+        print(f"   📞 Clienti da contattare: {len(CUSTOMER_LIST)}")
+        print(f"   🔍 Monitoraggio attivo: {monitoring_enabled}")
+        print("")
+    transition: "list_existing_batches"
+  
+  # FASE 1: Lista batch esistenti
+  list_existing_batches:
+    state_type: "command"
+    action:
+      eval: "print('📋 FASE 1: Controllo batch esistenti...')"
+    transition: "get_existing_list"
+  
+  get_existing_list:
+    state_type: "elevenlabs_batch_calling"
+    operation: "list"
+    api_key: "{ELEVENLABS_API_KEY}"
+    limit: 5
+    output: "existing_batches"
+    success_transition: "show_existing"
+    error_transition: "skip_existing_check"
+  
+  show_existing:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   📊 Trovati {existing_batches.batch_count} batch esistenti:")
+        for batch in existing_batches.data.batch_calls:
+            print(f"     - {batch['name']} ({batch['status']})")
+        print("")
+    transition: "create_new_batch"
+  
+  skip_existing_check:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   ⚠️ Impossibile recuperare batch esistenti:")
+        print(f"     {existing_batches.error}")
+        print("   ➡️ Procedo comunque con la creazione")
+        print("")
+    transition: "create_new_batch"
+  
+  # FASE 2: Creazione nuovo batch
+  create_new_batch:
+    state_type: "command"
+    action:
+      eval: |
+        import datetime
+        campaign_name = f"Complete Workflow Test - {datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        print(f"📞 FASE 2: Creazione nuovo batch call...")
+        print(f"   📝 Nome campagna: {campaign_name}")
+    transition: "submit_batch"
+  
+  submit_batch:
+    state_type: "elevenlabs_batch_calling"
+    operation: "submit"
+    api_key: "{ELEVENLABS_API_KEY}"
+    call_name: "Complete Workflow Test - {workflow_start_time}"
+    agent_id: "{AGENT_ID}"
+    agent_phone_number_id: "{AGENT_PHONE_NUMBER_ID}"
+    recipients: "{CUSTOMER_LIST}"
+    scheduled_time_unix: null
+    output: "new_batch"
+    success_transition: "batch_created_successfully"
+    error_transition: "batch_creation_failed"
+  
+  batch_created_successfully:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   ✅ Batch creato con successo!")
+        print(f"     🆔 ID: {new_batch.batch_id}")
+        print(f"     📞 Chiamate programmate: {new_batch.total_calls_scheduled}")
+        print(f"     📊 Status iniziale: {new_batch.status}")
+        print("")
+    transition: "start_monitoring_phase"
+  
+  batch_creation_failed:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   ❌ Creazione batch fallita!")
+        print(f"     💬 Errore: {new_batch.error}")
+        print("   🛑 Workflow terminato prematuramente")
+        print("")
+    transition: "end"
+  
+  # FASE 3: Monitoraggio
+  start_monitoring_phase:
+    state_type: "command"
+    action:
+      eval: |
+        if monitoring_enabled:
+            print(f"🔍 FASE 3: Monitoraggio batch in corso...")
+            print(f"   📊 Batch ID: {new_batch.batch_id}")
+            print(f"   🔄 Iterazioni massime: {max_monitor_iterations}")
+            print("")
+        else:
+            print(f"⏭️ FASE 3: Monitoraggio disabilitato, salto alla fase finale")
+    transition: "monitor_batch_loop"
+  
+  monitor_batch_loop:
+    state_type: "if"
+    condition: "{monitoring_enabled} == True and {current_iteration} < {max_monitor_iterations}"
+    true_transition: "get_batch_status"
+    false_transition: "final_status_check"
+  
+  get_batch_status:
+    state_type: "elevenlabs_batch_calling"
+    operation: "get"
+    api_key: "{ELEVENLABS_API_KEY}"
+    batch_id: "{new_batch.batch_id}"
+    output: "current_status"
+    success_transition: "analyze_status"
+    error_transition: "monitoring_error"
+  
+  analyze_status:
+    state_type: "command"
+    action:
+      eval: |
+        current_iteration += 1
+        status = current_status.data.status
+        dispatched = current_status.data.total_calls_dispatched
+        scheduled = current_status.data.total_calls_scheduled
+        progress = (dispatched / scheduled * 100) if scheduled > 0 else 0
+        
+        print(f"   📊 Controllo {current_iteration}/{max_monitor_iterations}")
+        print(f"     📈 Progresso: {dispatched}/{scheduled} ({progress:.1f}%)")
+        print(f"     📊 Status: {status}")
+        
+        # Verifica se terminato
+        if status in ['completed', 'failed', 'cancelled']:
+            monitoring_enabled = False
+            print(f"     🏁 Batch terminato!")
+    transition: "check_batch_status"
+  
+  check_batch_status:
+    state_type: "switch"
+    variable: "{current_status.data.status}"
+    cases:
+      "completed":
+        transition: "batch_monitoring_completed"
+      "failed":
+        transition: "batch_monitoring_failed"
+      "cancelled":
+        transition: "batch_monitoring_cancelled"
+    default_transition: "wait_next_check"
+  
+  wait_next_check:
+    state_type: "command"
+    action:
+      eval: |
+        import time
+        print(f"     ⏳ Attendo 10 secondi...")
+        time.sleep(10)
+    transition: "monitor_batch_loop"
+  
+  monitoring_error:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   ❌ Errore durante monitoraggio:")
+        print(f"     💬 {current_status.error}")
+        print(f"   ➡️ Procedo al controllo finale")
+    transition: "final_status_check"
+  
+  # FASE 4: Risultati finali
+  batch_monitoring_completed:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   🎉 Batch completato con successo!")
+        print("")
+    transition: "final_summary"
+  
+  batch_monitoring_failed:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   ❌ Batch fallito durante l'esecuzione!")
+        print("")
+    transition: "final_summary"
+  
+  batch_monitoring_cancelled:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   ⚠️ Batch cancellato!")
+        print("")
+    transition: "final_summary"
+  
+  final_status_check:
+    state_type: "command"
+    action:
+      eval: "print('🔍 FASE 4: Controllo status finale...')"
+    transition: "get_final_status"
+  
+  get_final_status:
+    state_type: "elevenlabs_batch_calling"
+    operation: "get"
+    api_key: "{ELEVENLABS_API_KEY}"
+    batch_id: "{new_batch.batch_id}"
+    output: "final_status"
+    success_transition: "final_summary"
+    error_transition: "final_error"
+  
+  final_error:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"   ❌ Impossibile recuperare status finale:")
+        print(f"     💬 {final_status.error}")
+    transition: "workflow_summary"
+  
+  final_summary:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"📊 RIEPILOGO FINALE:")
+        
+        if 'final_status' in locals() and final_status.success:
+            status_data = final_status.data
+        elif 'current_status' in locals() and current_status.success:
+            status_data = current_status.data
+        else:
+            status_data = new_batch.data
+        
+        print(f"   🆔 Batch ID: {status_data.get('id', new_batch.batch_id)}")
+        print(f"   📝 Nome: {status_data.get('name', 'N/A')}")
+        print(f"   📊 Status finale: {status_data.get('status', 'Unknown')}")
+        print(f"   📞 Chiamate completate: {status_data.get('total_calls_dispatched', 0)}")
+        print(f"   📞 Chiamate totali: {status_data.get('total_calls_scheduled', len(CUSTOMER_LIST))}")
+        
+        if status_data.get('total_calls_scheduled', 0) > 0:
+            completion_rate = (status_data.get('total_calls_dispatched', 0) / status_data.get('total_calls_scheduled', 1)) * 100
+            print(f"   📈 Tasso completamento: {completion_rate:.1f}%")
+        
+        print("")
+    transition: "workflow_summary"
+  
+  workflow_summary:
+    state_type: "command"
+    action:
+      eval: |
+        import datetime
+        end_time = datetime.datetime.now().isoformat()
+        
+        print(f"✅ WORKFLOW COMPLETATO!")
+        print(f"   📅 Iniziato: {workflow_start_time}")
+        print(f"   📅 Terminato: {end_time}")
+        print(f"   🔍 Iterazioni monitoraggio: {current_iteration}")
+        print(f"   📞 Clienti processati: {len(CUSTOMER_LIST)}")
+        print("")
+        print(f"🎯 Il workflow ha dimostrato tutte le funzionalità del plugin:")
+        print(f"   ✅ List - Lista batch esistenti")
+        print(f"   ✅ Submit - Creazione nuovo batch")
+        print(f"   ✅ Get - Monitoraggio status (x{current_iteration})")
+        print("")
+        print(f"🚀 Plugin ElevenLabs Batch Calling funziona correttamente!")
+    transition: "end"
+  
+  end:
+    state_type: "end"

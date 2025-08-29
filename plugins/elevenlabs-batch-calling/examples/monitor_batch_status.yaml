@@ -1,0 +1,133 @@
+# Esempio: Monitor Batch Status
+# Monitora lo stato di un batch call esistente
+
+variables:
+  # Configura qui le tue credenziali ElevenLabs
+  ELEVENLABS_API_KEY: "your_elevenlabs_api_key_here"
+  
+  # ID del batch da monitorare (ottenuto da un precedente submit)
+  BATCH_ID_TO_MONITOR: "your-batch-id-here"
+  
+  # Controllo loop di monitoraggio
+  monitoring_active: true
+  max_iterations: 10
+  current_iteration: 0
+
+states:
+  start:
+    state_type: "command"
+    action:
+      eval: "print(f'🔍 Inizio monitoraggio batch ID: {BATCH_ID_TO_MONITOR}')"
+    transition: "monitor_loop"
+  
+  monitor_loop:
+    state_type: "if"
+    condition: "{monitoring_active} == True and {current_iteration} < {max_iterations}"
+    true_transition: "check_status"
+    false_transition: "monitoring_ended"
+  
+  check_status:
+    state_type: "elevenlabs_batch_calling"
+    operation: "get"
+    api_key: "{ELEVENLABS_API_KEY}"
+    batch_id: "{BATCH_ID_TO_MONITOR}"
+    output: "current_status"
+    success_transition: "evaluate_status"
+    error_transition: "handle_error"
+  
+  evaluate_status:
+    state_type: "command"
+    action:
+      eval: |
+        # Incrementa il contatore
+        current_iteration += 1
+        
+        status = current_status.data.status
+        dispatched = current_status.data.total_calls_dispatched
+        scheduled = current_status.data.total_calls_scheduled
+        
+        print(f"📊 Iterazione {current_iteration}/{max_iterations}")
+        print(f"   📍 Batch: {current_status.data.name}")
+        print(f"   📊 Status: {status}")
+        print(f"   📞 Progresso: {dispatched}/{scheduled}")
+        print(f"   📅 Ultimo aggiornamento: {current_status.data.last_updated_at_unix}")
+        
+        # Verifica se il batch è terminato
+        if status in ['completed', 'failed', 'cancelled']:
+            monitoring_active = False
+            print(f"🏁 Batch terminato con status: {status}")
+    transition: "check_completion"
+  
+  check_completion:
+    state_type: "switch"
+    variable: "{current_status.data.status}"
+    cases:
+      "completed":
+        transition: "batch_completed"
+      "failed":
+        transition: "batch_failed"
+      "cancelled":
+        transition: "batch_cancelled"
+    default_transition: "wait_and_continue"
+  
+  wait_and_continue:
+    state_type: "command"
+    action:
+      eval: |
+        import time
+        print(f"   ⏳ Attendo 15 secondi prima del prossimo controllo...")
+        time.sleep(15)
+    transition: "monitor_loop"
+  
+  batch_completed:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"🎉 Batch completato con successo!")
+        print(f"   📞 Chiamate completate: {current_status.data.total_calls_dispatched}")
+        print(f"   📞 Chiamate totali: {current_status.data.total_calls_scheduled}")
+        print(f"   📅 Completato il: {current_status.timestamp}")
+    transition: "end"
+  
+  batch_failed:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"❌ Batch fallito!")
+        print(f"   📞 Chiamate completate: {current_status.data.total_calls_dispatched}")
+        print(f"   📞 Chiamate totali: {current_status.data.total_calls_scheduled}")
+        print(f"   📅 Fallito il: {current_status.timestamp}")
+    transition: "end"
+  
+  batch_cancelled:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"⚠️ Batch cancellato!")
+        print(f"   📞 Chiamate completate: {current_status.data.total_calls_dispatched}")
+        print(f"   📞 Chiamate totali: {current_status.data.total_calls_scheduled}")
+        print(f"   📅 Cancellato il: {current_status.timestamp}")
+    transition: "end"
+  
+  monitoring_ended:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"⏹️ Monitoraggio terminato")
+        print(f"   📊 Iterazioni completate: {current_iteration}")
+        print(f"   ℹ️ Il batch potrebbe essere ancora in corso")
+    transition: "end"
+  
+  handle_error:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"❌ Errore durante il monitoraggio:")
+        print(f"   💬 Messaggio: {current_status.error}")
+        print(f"   📅 Timestamp: {current_status.timestamp}")
+        if hasattr(current_status, 'status_code'):
+            print(f"   🔢 Status Code: {current_status.status_code}")
+    transition: "end"
+  
+  end:
+    state_type: "end"

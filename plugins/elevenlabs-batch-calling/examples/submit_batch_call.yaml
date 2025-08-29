@@ -1,0 +1,128 @@
+# Esempio: Submit Batch Call
+# Crea un nuovo job di batch calling con ElevenLabs
+
+variables:
+  # Configura qui le tue credenziali ElevenLabs
+  ELEVENLABS_API_KEY: "your_elevenlabs_api_key_here"
+  
+  # Configura qui i tuoi ID ElevenLabs
+  AGENT_ID: "your-agent-id"
+  AGENT_PHONE_NUMBER_ID: "your-phone-number-id"
+  
+  # Lista dei clienti con oggetti annidati (formato array nativo)
+  CUSTOMER_PHONES:
+    - phone_number: "+1234567890"
+      contact_info:
+        name: "Mario Rossi"
+        company: "Italian Corp"
+      preferences:
+        language: "it"
+        timezone: "Europe/Rome"
+      metadata:
+        priority: "high"
+        customer_type: "vip"
+        tags:
+          - "italian"
+          - "enterprise"
+    - phone_number: "+0987654321"
+      contact_info:
+        name: "John Smith"
+        company: "US Business Inc"
+      preferences:
+        language: "en"
+        timezone: "America/New_York"
+      metadata:
+        priority: "medium"
+        customer_type: "customer"
+        tags:
+          - "english"
+          - "standard"
+    - phone_number: "+1111111111"
+      contact_info:
+        name: "Pierre Dubois"
+        company: "French Solutions"
+      preferences:
+        language: "fr"
+        timezone: "Europe/Paris"
+        best_call_times:
+          - "09:00-12:00"
+          - "14:00-17:00"
+      metadata:
+        priority: "high"
+        customer_type: "vip"
+        tags:
+          - "french"
+          - "premium"
+        custom_fields:
+          account_value: "250000"
+          region: "EMEA"
+
+states:
+  start:
+    state_type: "command"
+    action:
+      eval: "print('🚀 Avvio campagna di batch calling...')"
+    transition: "create_batch_call"
+  
+  create_batch_call:
+    state_type: "elevenlabs_batch_calling"
+    operation: "submit"
+    api_key: "{ELEVENLABS_API_KEY}"
+    call_name: "Marketing Campaign Q1 2025"
+    agent_id: "{AGENT_ID}"
+    agent_phone_number_id: "{AGENT_PHONE_NUMBER_ID}"
+    recipients: "{CUSTOMER_PHONES}"
+    scheduled_time_unix: null  # Immediate call
+    output: "batch_result"
+    success_transition: "batch_created"
+    error_transition: "handle_error"
+  
+  batch_created:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"✅ Batch call creato con successo!")
+        print(f"   📍 ID: {batch_result.batch_id}")
+        print(f"   📞 Chiamate programmate: {batch_result.total_calls_scheduled}")
+        print(f"   📊 Status: {batch_result.status}")
+        print(f"   📅 Timestamp: {batch_result.timestamp}")
+        print(f"   👥 Recipients:")
+        for phone in CUSTOMER_PHONES:
+            name = phone['contact_info']['name']
+            company = phone['contact_info']['company']
+            priority = phone['metadata']['priority']
+            print(f"     - {name} ({company}) - Priorità: {priority}")
+    transition: "monitor_initial"
+  
+  monitor_initial:
+    state_type: "elevenlabs_batch_calling"
+    operation: "get"
+    api_key: "{ELEVENLABS_API_KEY}"
+    batch_id: "{batch_result.batch_id}"
+    output: "initial_status"
+    transition: "show_initial_status"
+  
+  show_initial_status:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"📊 Status iniziale del batch:")
+        print(f"   📍 Nome: {initial_status.data.name}")
+        print(f"   📊 Status: {initial_status.data.status}")
+        print(f"   📞 Chiamate completate: {initial_status.data.total_calls_dispatched}")
+        print(f"   📞 Chiamate totali: {initial_status.data.total_calls_scheduled}")
+    transition: "end"
+  
+  handle_error:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"❌ Errore durante la creazione del batch call:")
+        print(f"   💬 Messaggio: {batch_result.error}")
+        print(f"   📅 Timestamp: {batch_result.timestamp}")
+        if hasattr(batch_result, 'status_code'):
+            print(f"   🔢 Status Code: {batch_result.status_code}")
+    transition: "end"
+  
+  end:
+    state_type: "end"

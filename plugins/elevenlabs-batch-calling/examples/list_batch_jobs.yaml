@@ -1,0 +1,152 @@
+# Esempio: List Batch Jobs
+# Lista tutti i job di batch calling nel workspace
+
+variables:
+  # Configura qui le tue credenziali ElevenLabs
+  ELEVENLABS_API_KEY: "your_elevenlabs_api_key_here"
+  
+  # Configurazione paginazione
+  PAGE_LIMIT: 20
+  show_details: true
+
+states:
+  start:
+    state_type: "command"
+    action:
+      eval: "print('📋 Recupero lista batch calls...')"
+    transition: "list_first_page"
+  
+  list_first_page:
+    state_type: "elevenlabs_batch_calling"
+    operation: "list"
+    api_key: "{ELEVENLABS_API_KEY}"
+    limit: "{PAGE_LIMIT}"
+    output: "batch_list_page1"
+    success_transition: "show_first_page"
+    error_transition: "handle_error"
+  
+  show_first_page:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"📊 Prima pagina - Trovati {batch_list_page1.batch_count} batch calls:")
+        print(f"   📄 Limite per pagina: {PAGE_LIMIT}")
+        print(f"   📄 Ha più pagine: {batch_list_page1.has_more}")
+        print(f"   📅 Recuperato il: {batch_list_page1.timestamp}")
+        print(f"\n" + "="*60)
+        
+        for i, batch in enumerate(batch_list_page1.data.batch_calls, 1):
+            print(f"📞 {i}. {batch['name']}")
+            print(f"   🆔 ID: {batch['id']}")
+            print(f"   📊 Status: {batch['status']}")
+            print(f"   📅 Creato: {batch['created_at_unix']}")
+            print(f"   📱 Provider: {batch['phone_provider']}")
+            if show_details:
+                print(f"   👤 Agent: {batch['agent_id']}")
+                print(f"   📞 Telefono: {batch['phone_number_id']}")
+            print("")
+    transition: "check_more_pages"
+  
+  check_more_pages:
+    state_type: "if"
+    condition: "{batch_list_page1.has_more} == True"
+    true_transition: "list_second_page"
+    false_transition: "summary"
+  
+  list_second_page:
+    state_type: "elevenlabs_batch_calling"
+    operation: "list"
+    api_key: "{ELEVENLABS_API_KEY}"
+    limit: "{PAGE_LIMIT}"
+    last_doc: "{batch_list_page1.next_doc}"
+    output: "batch_list_page2"
+    success_transition: "show_second_page"
+    error_transition: "handle_pagination_error"
+  
+  show_second_page:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"📊 Seconda pagina - Trovati {batch_list_page2.batch_count} batch calls aggiuntivi:")
+        print(f"   📄 Ha più pagine: {batch_list_page2.has_more}")
+        print(f"\n" + "="*60)
+        
+        start_index = batch_list_page1.batch_count + 1
+        for i, batch in enumerate(batch_list_page2.data.batch_calls, start_index):
+            print(f"📞 {i}. {batch['name']}")
+            print(f"   🆔 ID: {batch['id']}")
+            print(f"   📊 Status: {batch['status']}")
+            print(f"   📅 Creato: {batch['created_at_unix']}")
+            print(f"   📱 Provider: {batch['phone_provider']}")
+            if show_details:
+                print(f"   👤 Agent: {batch['agent_id']}")
+                print(f"   📞 Telefono: {batch['phone_number_id']}")
+            print("")
+    transition: "combined_summary"
+  
+  combined_summary:
+    state_type: "command"
+    action:
+      eval: |
+        total_batches = batch_list_page1.batch_count + batch_list_page2.batch_count
+        has_more = batch_list_page2.has_more
+        
+        print(f"📊 RIEPILOGO COMPLETO:")
+        print(f"   📞 Batch totali visualizzati: {total_batches}")
+        print(f"   📄 Pagine recuperate: 2")
+        print(f"   📄 Sono presenti altre pagine: {has_more}")
+        
+        # Analizza gli stati
+        all_batches = batch_list_page1.data.batch_calls + batch_list_page2.data.batch_calls
+        status_count = {}
+        for batch in all_batches:
+            status = batch['status']
+            status_count[status] = status_count.get(status, 0) + 1
+        
+        print(f"\n📈 DISTRIBUZIONE PER STATUS:")
+        for status, count in status_count.items():
+            print(f"   {status}: {count}")
+    transition: "end"
+  
+  summary:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"📊 RIEPILOGO:")
+        print(f"   📞 Batch totali: {batch_list_page1.batch_count}")
+        print(f"   📄 Pagine: 1 (tutte visualizzate)")
+        
+        # Analizza gli stati
+        status_count = {}
+        for batch in batch_list_page1.data.batch_calls:
+            status = batch['status']
+            status_count[status] = status_count.get(status, 0) + 1
+        
+        print(f"\n📈 DISTRIBUZIONE PER STATUS:")
+        for status, count in status_count.items():
+            print(f"   {status}: {count}")
+    transition: "end"
+  
+  handle_pagination_error:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"⚠️ Errore durante il recupero della seconda pagina:")
+        print(f"   💬 Messaggio: {batch_list_page2.error}")
+        print(f"   📅 Timestamp: {batch_list_page2.timestamp}")
+        print(f"   ℹ️ Mostro solo la prima pagina")
+    transition: "summary"
+  
+  handle_error:
+    state_type: "command"
+    action:
+      eval: |
+        print(f"❌ Errore durante il recupero della lista:")
+        print(f"   💬 Messaggio: {batch_list_page1.error}")
+        print(f"   📅 Timestamp: {batch_list_page1.timestamp}")
+        if hasattr(batch_list_page1, 'status_code'):
+            print(f"   🔢 Status Code: {batch_list_page1.status_code}")
+    transition: "end"
+  
+  end:
+    state_type: "end"

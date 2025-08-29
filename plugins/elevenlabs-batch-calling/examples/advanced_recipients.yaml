@@ -1,0 +1,356 @@
+# Esempio: Formati Progressivi per Recipients con Oggetti Annidati
+# Dimostra la crescente complessità degli oggetti annidati supportati
+
+variables:
+  # Configura qui le tue credenziali ElevenLabs
+  ELEVENLABS_API_KEY: "your_elevenlabs_api_key_here"
+  AGENT_ID: "your-agent-id"
+  AGENT_PHONE_NUMBER_ID: "your-phone-number-id"
+  
+  # Livello 1: Recipients minimali (solo phone_number)
+  RECIPIENTS_MINIMAL:
+    - phone_number: "+1234567890"
+    - phone_number: "+0987654321"
+  
+  # Livello 2: Recipients con contact_info base
+  RECIPIENTS_BASIC:
+    - phone_number: "+1234567890"
+      contact_info:
+        name: "Mario Rossi"
+    - phone_number: "+0987654321"
+      contact_info:
+        name: "John Smith"
+  
+  # Livello 3: Recipients con contact_info completo
+  RECIPIENTS_CONTACT_INFO:
+    - phone_number: "+1234567890"
+      contact_info:
+        name: "Mario Rossi"
+        company: "Italian Corp"
+        title: "Sales Director"
+        department: "Sales"
+    - phone_number: "+0987654321"
+      contact_info:
+        name: "John Smith"
+        company: "American Inc"
+        title: "Product Manager"
+        department: "Product"
+  
+  # Livello 4: Recipients con preferences
+  RECIPIENTS_WITH_PREFERENCES:
+    - phone_number: "+1234567890"
+      contact_info:
+        name: "Mario Rossi"
+        company: "Italian Corp"
+      preferences:
+        language: "it"
+        timezone: "Europe/Rome"
+        best_call_times:
+          - "09:00-12:00"
+          - "14:00-18:00"
+    - phone_number: "+0987654321"
+      contact_info:
+        name: "John Smith"
+        company: "American Inc"
+      preferences:
+        language: "en"
+        timezone: "America/New_York"
+        best_call_times:
+          - "08:00-17:00"
+        blackout_dates:
+          - "2025-07-04"
+          - "2025-12-25"
+  
+  # Livello 5: Recipients completi con metadata
+  RECIPIENTS_COMPLETE:
+    - phone_number: "+1234567890"
+      contact_info:
+        name: "Mario Rossi"
+        company: "Italian Corp"
+        title: "CEO"
+        department: "Executive"
+      preferences:
+        language: "it"
+        timezone: "Europe/Rome"
+        best_call_times:
+          - "09:00-12:00"
+          - "15:00-18:00"
+        blackout_dates:
+          - "2025-08-15"
+          - "2025-12-25"
+      metadata:
+        priority: "urgent"
+        customer_type: "vip"
+        tags:
+          - "italian"
+          - "enterprise"
+          - "decision-maker"
+        custom_fields:
+          account_value: "1000000"
+          contract_type: "Enterprise"
+          last_interaction: "2025-01-15"
+          sales_rep: "Alice Johnson"
+    - phone_number: "+0987654321"
+      contact_info:
+        name: "John Smith"
+        company: "American Inc"
+        title: "CTO"
+        department: "Technology"
+      preferences:
+        language: "en"
+        timezone: "America/New_York"
+        best_call_times:
+          - "10:00-16:00"
+      metadata:
+        priority: "high"
+        customer_type: "customer"
+        tags:
+          - "english"
+          - "tech-focused"
+          - "innovation-leader"
+        custom_fields:
+          account_value: "750000"
+          tech_stack: "Cloud Native"
+          partnership_level: "Gold"
+    - phone_number: "+33123456789"
+      contact_info:
+        name: "Pierre Dubois"
+        company: "French Solutions SARL"
+        title: "Directeur Général"
+        department: "Direction"
+      preferences:
+        language: "fr"
+        timezone: "Europe/Paris"
+        best_call_times:
+          - "08:00-11:00"
+          - "14:00-16:00"
+        blackout_dates:
+          - "2025-07-14"
+          - "2025-08-01"
+      metadata:
+        priority: "medium"
+        customer_type: "prospect"
+        tags:
+          - "french"
+          - "emerging-market"
+          - "expansion-target"
+        custom_fields:
+          market_potential: "High"
+          industry: "Manufacturing"
+          referral_source: "Trade Show"
+
+states:
+  start:
+    state_type: "command"
+    action:
+      eval: |
+        print("🧪 DEMO: Formati Progressivi Recipients con Oggetti Annidati")
+        print("Questo esempio mostra 5 livelli crescenti di complessità")
+        print("")
+    transition: "demo_minimal"
+  
+  # LIVELLO 1: Minimal
+  demo_minimal:
+    state_type: "command"
+    action:
+      eval: |
+        print("📞 LIVELLO 1: Recipients Minimali")
+        print("   Solo phone_number richiesto:")
+        for i, recipient in enumerate(RECIPIENTS_MINIMAL, 1):
+            print(f"   {i}. {recipient['phone_number']}")
+        print("")
+    transition: "create_minimal_batch"
+  
+  create_minimal_batch:
+    state_type: "elevenlabs_batch_calling"
+    operation: "submit"
+    api_key: "{ELEVENLABS_API_KEY}"
+    call_name: "Demo Minimal Recipients"
+    agent_id: "{AGENT_ID}"
+    agent_phone_number_id: "{AGENT_PHONE_NUMBER_ID}"
+    recipients: "{RECIPIENTS_MINIMAL}"
+    output: "minimal_result"
+    success_transition: "minimal_success"
+    error_transition: "minimal_error"
+  
+  minimal_success:
+    state_type: "command"
+    action:
+      eval: |
+        print("   ✅ Batch minimale creato!")
+        print(f"   🆔 ID: {minimal_result.batch_id}")
+        print("")
+    transition: "demo_basic"
+  
+  minimal_error:
+    state_type: "command"
+    action:
+      eval: |
+        print("   ❌ Errore (atteso senza credenziali valide)")
+        print("")
+    transition: "demo_basic"
+  
+  # LIVELLO 2: Basic contact_info
+  demo_basic:
+    state_type: "command"
+    action:
+      eval: |
+        print("📞 LIVELLO 2: Recipients con Contact Info Base")
+        print("   phone_number + contact_info.name:")
+        for i, recipient in enumerate(RECIPIENTS_BASIC, 1):
+            name = recipient['contact_info']['name']
+            phone = recipient['phone_number']
+            print(f"   {i}. {name} ({phone})")
+        print("")
+    transition: "create_basic_batch"
+  
+  create_basic_batch:
+    state_type: "elevenlabs_batch_calling"
+    operation: "submit"
+    api_key: "{ELEVENLABS_API_KEY}"
+    call_name: "Demo Basic Recipients"
+    agent_id: "{AGENT_ID}"
+    agent_phone_number_id: "{AGENT_PHONE_NUMBER_ID}"
+    recipients: "{RECIPIENTS_BASIC}"
+    output: "basic_result"
+    success_transition: "basic_success"
+    error_transition: "basic_error"
+  
+  basic_success:
+    state_type: "command"
+    action:
+      eval: |
+        print("   ✅ Batch con nomi creato!")
+        print(f"   🆔 ID: {basic_result.batch_id}")
+        print("")
+    transition: "demo_contact_info"
+  
+  basic_error:
+    state_type: "command"
+    action:
+      eval: |
+        print("   ❌ Errore (atteso senza credenziali valide)")
+        print("")
+    transition: "demo_contact_info"
+  
+  # LIVELLO 3: Contact info completo
+  demo_contact_info:
+    state_type: "command"
+    action:
+      eval: |
+        print("📞 LIVELLO 3: Recipients con Contact Info Completo")
+        print("   phone_number + contact_info completo:")
+        for i, recipient in enumerate(RECIPIENTS_CONTACT_INFO, 1):
+            contact = recipient['contact_info']
+            name = contact['name']
+            company = contact['company']
+            title = contact['title']
+            print(f"   {i}. {name} - {title} @ {company}")
+        print("")
+    transition: "demo_preferences"
+  
+  # LIVELLO 4: Con preferences
+  demo_preferences:
+    state_type: "command"
+    action:
+      eval: |
+        print("📞 LIVELLO 4: Recipients con Preferences")
+        print("   contact_info + preferences (language, timezone, orari):")
+        for i, recipient in enumerate(RECIPIENTS_WITH_PREFERENCES, 1):
+            contact = recipient['contact_info']
+            prefs = recipient['preferences']
+            name = contact['name']
+            lang = prefs['language']
+            tz = prefs['timezone']
+            times = len(prefs.get('best_call_times', []))
+            blackouts = len(prefs.get('blackout_dates', []))
+            print(f"   {i}. {name} - Lang:{lang}, TZ:{tz}, Times:{times}, Blackouts:{blackouts}")
+        print("")
+    transition: "demo_complete"
+  
+  # LIVELLO 5: Completo con metadata
+  demo_complete:
+    state_type: "command"
+    action:
+      eval: |
+        print("📞 LIVELLO 5: Recipients Completi con Metadata")
+        print("   Struttura completa con tutti gli oggetti annidati:")
+        for i, recipient in enumerate(RECIPIENTS_COMPLETE, 1):
+            contact = recipient['contact_info']
+            prefs = recipient['preferences']
+            meta = recipient['metadata']
+            
+            name = contact['name']
+            company = contact['company']
+            title = contact['title']
+            priority = meta['priority']
+            customer_type = meta['customer_type']
+            tags_count = len(meta['tags'])
+            custom_count = len(meta['custom_fields'])
+            
+            print(f"   {i}. {name} ({title} @ {company})")
+            print(f"      Priority:{priority}, Type:{customer_type}")
+            print(f"      Tags:{tags_count}, CustomFields:{custom_count}")
+            print(f"      Language:{prefs['language']}, TZ:{prefs['timezone']}")
+        print("")
+    transition: "create_complete_batch"
+  
+  create_complete_batch:
+    state_type: "elevenlabs_batch_calling"
+    operation: "submit"
+    api_key: "{ELEVENLABS_API_KEY}"
+    call_name: "Demo Complete Recipients"
+    agent_id: "{AGENT_ID}"
+    agent_phone_number_id: "{AGENT_PHONE_NUMBER_ID}"
+    recipients: "{RECIPIENTS_COMPLETE}"
+    output: "complete_result"
+    success_transition: "complete_success"
+    error_transition: "complete_error"
+  
+  complete_success:
+    state_type: "command"
+    action:
+      eval: |
+        print("   ✅ Batch completo creato con successo!")
+        print(f"   🆔 ID: {complete_result.batch_id}")
+        print(f"   📊 Status: {complete_result.status}")
+        print(f"   📞 Recipients: {complete_result.total_calls_scheduled}")
+        print("")
+    transition: "final_summary"
+  
+  complete_error:
+    state_type: "command"
+    action:
+      eval: |
+        print("   ❌ Errore nella creazione del batch completo")
+        print(f"   💬 Dettaglio: {complete_result.error}")
+        print("")
+    transition: "final_summary"
+  
+  final_summary:
+    state_type: "command"
+    action:
+      eval: |
+        print("🎯 RIEPILOGO DEMO OGGETTI ANNIDATI:")
+        print("")
+        print("✅ 5 Livelli di Complessità Testati:")
+        print("   1. Minimal: Solo phone_number")
+        print("   2. Basic: + contact_info.name")
+        print("   3. Contact Info: + company, title, department")
+        print("   4. Preferences: + language, timezone, orari, blackouts")
+        print("   5. Complete: + metadata (priority, tags, custom_fields)")
+        print("")
+        print("🏗️ Architettura Oggetti Annidati:")
+        print("   📱 phone_number (obbligatorio)")
+        print("   👤 contact_info (name, company, title, department)")
+        print("   ⚙️  preferences (language, timezone, best_times, blackouts)")
+        print("   📊 metadata (priority, customer_type, tags, custom_fields)")
+        print("")
+        print("🎨 Il frontend può ora generare UI automaticamente")
+        print("   basandosi sullo schema JSON del manifest!")
+        print("")
+        print("🚀 Sistema completo per oggetti annidati funzionante!")
+    transition: "end"
+  
+  end:
+    state_type: "end"

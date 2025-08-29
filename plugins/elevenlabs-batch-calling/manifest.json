@@ -1,0 +1,348 @@
+{
+  "name": "elevenlabs-batch-calling",
+  "version": "1.1.0",
+  "description": "Plugin per gestire batch calls di ElevenLabs Conversational AI. Supporta la creazione, monitoraggio e gestione di campagne di chiamate automatizzate con oggetti annidati.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "elevenlabs_batch_calling_state.py",
+  "state_type": "elevenlabs_batch_calling",
+  "plugin_type": "state",
+  "dependencies": {},
+  "requirements": [
+    "requests>=2.25.0"
+  ],
+  "api_version": "1.0",
+  "tags": [
+    "elevenlabs",
+    "batch-calling",
+    "conversational-ai",
+    "phone",
+    "automation",
+    "voice"
+  ],
+  "documentation": {
+    "parameters": {
+      "api_key": {
+        "type": "string",
+        "required": true,
+        "description": "API key di ElevenLabs per l'autenticazione. Usa {ELEVENLABS_API_KEY} per la variabile d'ambiente"
+      },
+      "operation": {
+        "type": "string",
+        "required": false,
+        "default": "submit",
+        "description": "Operazione da eseguire: 'submit', 'get', 'list'",
+        "enum": ["submit", "get", "list"]
+      },
+      "call_name": {
+        "type": "string",
+        "required": false,
+        "description": "Nome del job di batch calling (richiesto per operation 'submit')"
+      },
+      "agent_id": {
+        "type": "string",
+        "required": false,
+        "description": "ID dell'agent ElevenLabs da utilizzare (richiesto per operation 'submit')"
+      },
+      "agent_phone_number_id": {
+        "type": "string",
+        "required": false,
+        "description": "ID del numero di telefono dell'agent (richiesto per operation 'submit')"
+      },
+      "recipients": {
+        "type": "array",
+        "required": false,
+        "description": "Lista di recipients per batch calling (richiesto per operation 'submit'). Supporta oggetti annidati per dati complessi.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "phone_number": {
+              "type": "string",
+              "required": true,
+              "description": "Numero di telefono in formato internazionale (es. +1234567890)",
+              "pattern": "^\\+[1-9]\\d{1,14}$"
+            },
+            "contact_info": {
+              "type": "object",
+              "required": false,
+              "description": "Informazioni di contatto del recipient",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Nome completo del contatto"
+                },
+                "company": {
+                  "type": "string", 
+                  "description": "Nome dell'azienda"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Titolo/ruolo del contatto"
+                },
+                "department": {
+                  "type": "string",
+                  "description": "Dipartimento di appartenenza"
+                }
+              }
+            },
+            "preferences": {
+              "type": "object",
+              "required": false,
+              "description": "Preferenze di comunicazione del recipient",
+              "properties": {
+                "language": {
+                  "type": "string",
+                  "description": "Codice lingua preferita (es. 'it', 'en', 'es', 'fr')",
+                  "enum": ["it", "en", "es", "fr", "de", "pt", "ru", "zh", "ja", "ko"]
+                },
+                "timezone": {
+                  "type": "string",
+                  "description": "Timezone del recipient (es. 'Europe/Rome', 'America/New_York')"
+                },
+                "best_call_times": {
+                  "type": "array",
+                  "description": "Fasce orarie preferite per le chiamate",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+                  }
+                },
+                "blackout_dates": {
+                  "type": "array",
+                  "description": "Date in cui non effettuare chiamate",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                  }
+                }
+              }
+            },
+            "metadata": {
+              "type": "object",
+              "required": false,
+              "description": "Metadati personalizzati per il recipient",
+              "properties": {
+                "priority": {
+                  "type": "string",
+                  "description": "Priorità del contatto",
+                  "enum": ["low", "medium", "high", "urgent"]
+                },
+                "customer_type": {
+                  "type": "string", 
+                  "description": "Tipo di cliente",
+                  "enum": ["prospect", "customer", "vip", "partner"]
+                },
+                "tags": {
+                  "type": "array",
+                  "description": "Tag personalizzati",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "custom_fields": {
+                  "type": "object",
+                  "description": "Campi personalizzati aggiuntivi",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "minItems": 1,
+        "maxItems": 1000
+      },
+      "scheduled_time_unix": {
+        "type": "integer",
+        "required": false,
+        "description": "Timestamp Unix per programmare le chiamate (opzionale, null per immediate)"
+      },
+      "batch_id": {
+        "type": "string",
+        "required": false,
+        "description": "ID del batch job da recuperare (richiesto per operation 'get')"
+      },
+      "limit": {
+        "type": "integer",
+        "required": false,
+        "default": 100,
+        "description": "Numero massimo di job da recuperare (per operation 'list')",
+        "minimum": 1,
+        "maximum": 1000
+      },
+      "last_doc": {
+        "type": "string",
+        "required": false,
+        "description": "Token di paginazione per continuare la lista (per operation 'list')"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare il risultato dell'operazione"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "Submit Batch Call - Base",
+        "description": "Batch call con recipients semplici",
+        "config": {
+          "state_type": "elevenlabs_batch_calling",
+          "operation": "submit",
+          "api_key": "{ELEVENLABS_API_KEY}",
+          "call_name": "Marketing Campaign Q1",
+          "agent_id": "your-agent-id",
+          "agent_phone_number_id": "your-phone-number-id",
+          "recipients": [
+            {
+              "phone_number": "+1234567890",
+              "contact_info": {
+                "name": "Mario Rossi"
+              }
+            },
+            {
+              "phone_number": "+0987654321", 
+              "contact_info": {
+                "name": "John Smith"
+              }
+            }
+          ],
+          "output": "batch_result",
+          "success_transition": "monitor_batch",
+          "error_transition": "handle_error"
+        }
+      },
+      {
+        "name": "Submit Batch Call - Avanzato",
+        "description": "Batch call con oggetti annidati complessi",
+        "config": {
+          "state_type": "elevenlabs_batch_calling",
+          "operation": "submit",
+          "api_key": "{ELEVENLABS_API_KEY}",
+          "call_name": "VIP Customer Survey",
+          "agent_id": "your-agent-id",
+          "agent_phone_number_id": "your-phone-number-id",
+          "recipients": [
+            {
+              "phone_number": "+1234567890",
+              "contact_info": {
+                "name": "Mario Rossi",
+                "company": "ABC Corp",
+                "title": "CEO",
+                "department": "Executive"
+              },
+              "preferences": {
+                "language": "it",
+                "timezone": "Europe/Rome",
+                "best_call_times": ["09:00-12:00", "14:00-18:00"],
+                "blackout_dates": ["2025-08-15", "2025-12-25"]
+              },
+              "metadata": {
+                "priority": "high",
+                "customer_type": "vip", 
+                "tags": ["italian", "enterprise", "decision-maker"],
+                "custom_fields": {
+                  "account_value": "500000",
+                  "last_interaction": "2025-01-15"
+                }
+              }
+            }
+          ],
+          "output": "advanced_batch",
+          "transition": "next_step"
+        }
+      },
+      {
+        "name": "Get Batch Status",
+        "description": "Recupera lo status di un batch call",
+        "config": {
+          "state_type": "elevenlabs_batch_calling",
+          "operation": "get",
+          "api_key": "{ELEVENLABS_API_KEY}",
+          "batch_id": "{batch_result.batch_id}",
+          "output": "batch_status",
+          "transition": "next_step"
+        }
+      },
+      {
+        "name": "List All Batch Jobs",
+        "description": "Lista tutti i job di batch calling",
+        "config": {
+          "state_type": "elevenlabs_batch_calling",
+          "operation": "list",
+          "api_key": "{ELEVENLABS_API_KEY}",
+          "limit": 50,
+          "output": "batch_list",
+          "transition": "process_list"
+        }
+      }
+    ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. La dipendenza requests verrà installata automaticamente",
+      "3. Configurare un account ElevenLabs con Conversational AI:",
+      "   - Vai su https://elevenlabs.io/",
+      "   - Attiva il servizio Conversational AI",
+      "   - Crea un agent e ottieni l'agent_id",
+      "   - Configura un numero di telefono e ottieni agent_phone_number_id",
+      "   - Vai su Profile & API Key e copia la tua API key",
+      "4. Configurare l'API key nelle variabili d'ambiente:",
+      "   - export ELEVENLABS_API_KEY=your_api_key",
+      "5. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log di avvio:",
+      "✅ Stato 'elevenlabs_batch_calling' registrato dalla classe ElevenLabsBatchCallingState"
+    ],
+    "environment_variables": [
+      "ELEVENLABS_API_KEY - API key di ElevenLabs per l'autenticazione"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
+  },
+  "ui_schema": {
+    "description": "Schema per generazione automatica UI nel frontend",
+    "recipients": {
+      "ui_component": "array_builder",
+      "item_template": {
+        "phone_number": {
+          "ui_component": "text_input",
+          "validation": "phone",
+          "required": true
+        },
+        "contact_info": {
+          "ui_component": "collapsible_section",
+          "title": "Informazioni Contatto",
+          "fields": ["name", "company", "title", "department"]
+        },
+        "preferences": {
+          "ui_component": "collapsible_section", 
+          "title": "Preferenze Comunicazione",
+          "fields": ["language", "timezone", "best_call_times", "blackout_dates"]
+        },
+        "metadata": {
+          "ui_component": "collapsible_section",
+          "title": "Metadati",
+          "advanced": true,
+          "fields": ["priority", "customer_type", "tags", "custom_fields"]
+        }
+      }
+    }
+  },
+  "links": {
+    "documentation": "https://elevenlabs.io/docs/conversational-ai/phone-numbers/batch-calls",
+    "api_reference": "https://elevenlabs.io/docs/api-reference/batch-calling/create"
+  }
+}
