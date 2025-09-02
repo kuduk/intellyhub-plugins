@@ -124,9 +124,12 @@ class ElevenLabsBatchCallingState(BaseState):
             "call_name": call_name,
             "agent_id": agent_id,
             "agent_phone_number_id": agent_phone_number_id,
-            "recipients": formatted_recipients,
-            "scheduled_time_unix": scheduled_time_unix
+            "recipients": formatted_recipients
         }
+        
+        # Aggiungi scheduled_time_unix solo se non è null/None
+        if scheduled_time_unix is not None:
+            payload["scheduled_time_unix"] = scheduled_time_unix
         
         # Headers per l'API
         headers = {
