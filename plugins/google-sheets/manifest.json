@@ -1,0 +1,186 @@
+{
+  "name": "google-sheets",
+  "version": "1.0.0",
+  "description": "Plugin per leggere, scrivere e cercare dati in Google Sheets. Supporta operazioni complete sui fogli di calcolo incluso lettura, scrittura, ricerca, append e pulizia.",
+  "author": "IntellyHub Team",
+  "license": "MIT",
+  "entry_file": "google-sheets_state.py",
+  "state_type": "google_sheets",
+  "requirements": [
+    "google-auth>=2.23.0",
+    "google-auth-oauthlib>=1.1.0", 
+    "google-auth-httplib2>=0.1.1",
+    "google-api-python-client>=2.100.0",
+    "requests>=2.25.0"
+  ],
+  "api_version": "1.0",
+  "tags": ["google", "sheets", "spreadsheet", "data", "excel", "automation"],
+  "documentation": {
+    "parameters": {
+      "action": {
+        "type": "string",
+        "required": true,
+        "description": "Azione da eseguire sul foglio",
+        "options": ["read", "write", "search", "append", "clear", "create_sheet"]
+      },
+      "spreadsheet_id": {
+        "type": "string", 
+        "required": true,
+        "description": "ID del foglio Google Sheets (estratto dall'URL del documento)"
+      },
+      "sheet_name": {
+        "type": "string",
+        "required": false,
+        "default": "Sheet1",
+        "description": "Nome del foglio all'interno del documento"
+      },
+      "range": {
+        "type": "string",
+        "required": false,
+        "description": "Range di celle in formato A1 (es: 'A1:C10', 'A:C', 'A1')"
+      },
+      "values": {
+        "type": "array",
+        "required": false,
+        "description": "Valori da scrivere o aggiungere (array di array per righe/colonne)"
+      },
+      "search_query": {
+        "type": "string",
+        "required": false,
+        "description": "Testo da cercare nel foglio"
+      },
+      "search_column": {
+        "type": "string",
+        "required": false,
+        "description": "Colonna specifica per la ricerca (es: 'A', 'B', 'Name')"
+      },
+      "credentials_json": {
+        "type": "string",
+        "required": false,
+        "description": "JSON delle credenziali del service account come stringa"
+      },
+      "credentials_path": {
+        "type": "string",
+        "required": false,
+        "description": "Percorso del file JSON con le credenziali"
+      },
+      "output": {
+        "type": "string",
+        "required": false,
+        "description": "Nome della variabile dove salvare il risultato"
+      },
+      "success_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di successo"
+      },
+      "error_transition": {
+        "type": "string",
+        "required": false,
+        "description": "Stato successivo in caso di errore"
+      }
+    },
+    "examples": [
+      {
+        "name": "Lettura dati da foglio",
+        "description": "Legge tutte le righe da un range specifico",
+        "config": {
+          "state_type": "google_sheets",
+          "action": "read",
+          "spreadsheet_id": "{SHEET_ID}",
+          "sheet_name": "Dati",
+          "range": "A1:E100",
+          "output": "sheet_data",
+          "transition": "process_data"
+        }
+      },
+      {
+        "name": "Scrittura dati",
+        "description": "Scrive dati in un range specifico",
+        "config": {
+          "state_type": "google_sheets",
+          "action": "write",
+          "spreadsheet_id": "{SHEET_ID}",
+          "range": "A1:B2",
+          "values": [["Nome", "Email"], ["Mario Rossi", "mario@email.com"]],
+          "success_transition": "data_written",
+          "error_transition": "handle_error"
+        }
+      },
+      {
+        "name": "Ricerca nel foglio", 
+        "description": "Cerca un valore specifico nel foglio",
+        "config": {
+          "state_type": "google_sheets",
+          "action": "search",
+          "spreadsheet_id": "{SHEET_ID}",
+          "search_query": "mario@email.com",
+          "search_column": "B",
+          "output": "search_results",
+          "transition": "process_results"
+        }
+      },
+      {
+        "name": "Aggiunta nuova riga",
+        "description": "Aggiunge una nuova riga alla fine del foglio",
+        "config": {
+          "state_type": "google_sheets",
+          "action": "append",
+          "spreadsheet_id": "{SHEET_ID}",
+          "sheet_name": "Utenti",
+          "values": [["Nuovo Utente", "nuovo@email.com", "2024"]],
+          "transition": "user_added"
+        }
+      },
+      {
+        "name": "Pulizia range",
+        "description": "Pulisce i dati in un range specifico",
+        "config": {
+          "state_type": "google_sheets", 
+          "action": "clear",
+          "spreadsheet_id": "{SHEET_ID}",
+          "range": "A1:Z1000",
+          "transition": "data_cleared"
+        }
+      },
+      {
+        "name": "Creazione nuovo foglio",
+        "description": "Crea un nuovo foglio nel documento",
+        "config": {
+          "state_type": "google_sheets",
+          "action": "create_sheet",
+          "spreadsheet_id": "{SHEET_ID}",
+          "sheet_name": "Nuovo Foglio",
+          "output": "new_sheet_info",
+          "transition": "sheet_created"
+        }
+      }
+    ]
+  },
+  "installation": {
+    "instructions": [
+      "1. Il plugin verrà installato automaticamente in flow/states/",
+      "2. Le dipendenze Google APIs verranno installate automaticamente",
+      "3. Configurare Google Cloud Console:",
+      "   - Creare un progetto su Google Cloud Console",
+      "   - Abilitare Google Sheets API",
+      "   - Creare un Service Account",
+      "   - Scaricare le credenziali JSON del service account",
+      "4. Condividere il foglio Google con l'email del service account",
+      "5. Configurare le credenziali nelle variabili d'ambiente o nel workflow",
+      "6. Riavviare l'applicazione per caricare il plugin"
+    ],
+    "post_install": [
+      "Verificare che il plugin sia caricato nei log:",
+      "✅ Stato 'google_sheets' registrato dalla classe GoogleSheetsState"
+    ],
+    "environment_variables": [
+      "GOOGLE_SERVICE_ACCOUNT_KEY - Il contenuto JSON delle credenziali",
+      "GOOGLE_CREDENTIALS_PATH - Percorso al file delle credenziali (alternativo)"
+    ]
+  },
+  "compatibility": {
+    "python_version": ">=3.7",
+    "platforms": ["linux", "macos", "windows"]
+  }
+}

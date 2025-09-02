@@ -28,7 +28,7 @@ class EmailListener(BaseListener):
         self.username = self.format_recursive(self.event_config.get("username"), self.global_context)
         self.password = self.format_recursive(self.event_config.get("password"), self.global_context)
         self.folder = self.format_recursive(self.event_config.get("folder", "inbox"), self.global_context)
-        
+        self.poll_interval = int(self.event_config.get("poll_interval", 60))  # in secondi
         # Aggiungo un controllo per verificare che la configurazione essenziale sia presente
         if not all([self.server, self.username, self.password]):
             raise ValueError("Configurazione per EmailListener incompleta. 'server', 'username', e 'password' sono richiesti.")
@@ -110,4 +110,4 @@ class EmailListener(BaseListener):
                 continue
 
             # Aspetta 60 secondi prima del prossimo controllo
-            time.sleep(60)
+            time.sleep(self.poll_interval)
